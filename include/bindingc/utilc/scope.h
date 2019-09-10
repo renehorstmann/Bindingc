@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 /** Macro to create a Scope named scope_ */
-#define Scope ScopeType scope_ = {};
+#define Scope ScopeType scope_ = {0};
 
 /** Macro to add a data to be freed to the Scope scope_ */
 #define ScopeAddData(pointer_to_data) scope_add_data(&scope_, (void**) (pointer_to_data));
