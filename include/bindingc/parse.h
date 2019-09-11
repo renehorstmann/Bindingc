@@ -35,14 +35,13 @@ void bc_ParsedInfo_kill(bc_ParsedInfo *self);
 void bc_ParsedFunction_kill(bc_ParsedFunction *self);
 
 
+bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu);
 
 bc_ParsedInfo bc_parse_info_text(StrViu viu);
 
-bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu);
-
 bc_ParsedParameter bc_parse_parameter(StrViu viu);
 
-bc_ParsedFunction bc_parse_function(StrViu viu);
+bc_ParsedFunction bc_parse_function(StrViu info, StrViu function);
 
 void bc_parse_file(bc_ParsedFunction **functions, StrViu filetext);
 

@@ -26,8 +26,8 @@ int main() {
                        " */\n"
                        "EXPORT void foo(int a, int b);";
 
-    bc_ParsedFunction *functions;
-    bc_parse_file(&functions, ToStrViu(test));
+//    bc_ParsedFunction functions = bc_parse_function(info, function);
+//    bc_parse_file(&functions, ToStrViu(test));
 
     return 0;
 }

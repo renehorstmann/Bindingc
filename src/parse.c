@@ -36,6 +36,41 @@ void bc_ParsedFunction_kill(bc_ParsedFunction *self) {
 }
 
 
+
+bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
+    // string view such as "name=\"Peter\": the name of some guy."
+    bc_ParsedParameterInfo res = {0};
+
+    viu = sv_strip(viu, ' ');
+    StrViu name = {viu.begin};
+
+
+    StrViu info = sv_eat_until_multiple(viu, "=: ");
+    if (sv_empty(info))
+        return res;
+
+    name.end = info.begin;
+    name = sv_rstrip(name, ' ');
+
+    if (*info.begin == '=') {
+        StrViu behind_def = sv_eat_until_multiple(info, ": ");
+        StrViu def = sv_strip((StrViu) {info.begin + 1, behind_def.begin}, ' ');
+        res.default_value = sv_heap_cpy(def);
+        info = behind_def;
+    }
+
+    // ignore "=:"
+    if (!isspace(*info.begin))
+        info.begin++;
+
+    info = sv_lstrip(info, ' ');
+
+    res.name = sv_heap_cpy(name);
+    if (!sv_empty(info))
+        res.info = sv_heap_cpy(info);
+    return res;
+}
+
 bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     bc_ParsedInfo res = {0};
     res.parameterInfos = calloc(1, sizeof(bc_ParsedParameterInfo));
@@ -97,39 +132,6 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     return res;
 }
 
-
-bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
-    // string view such as "name=\"Peter\": the name of some guy."
-    bc_ParsedParameterInfo res = {0};
-
-    viu = sv_strip(viu, ' ');
-    StrViu name = {viu.begin};
-
-
-    StrViu info = sv_eat_until_multiple(viu, "=: ");
-    if (sv_empty(info))
-        return res;
-
-    name.end = info.begin;
-    name = sv_rstrip(name, ' ');
-    info = sv_lstrip(info, ' ');
-
-    if (*info.begin == '=') {
-        StrViu behind_def = sv_eat_until_multiple(info, ": ");
-        StrViu def = sv_strip((StrViu) {info.begin + 1, behind_def.begin}, ' ');
-        res.default_value = sv_heap_cpy(def);
-        info = behind_def;
-    }
-
-    info.begin++;
-    info = sv_lstrip(info, ' ');
-
-    res.name = sv_heap_cpy(name);
-    if (!sv_empty(info))
-        res.info = sv_heap_cpy(info);
-    return res;
-}
-
 bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     // string view such as "const char *name" or "string IN s", ...
     bc_ParsedParameter res = {0};
@@ -153,19 +155,13 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     return res;
 }
 
-bc_ParsedFunction bc_parse_function(StrViu viu) {
+bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
     bc_ParsedFunction res = {0};
 
 
-    StrViu info = {viu.begin, viu.begin};
-    int info_end = sv_find_first_cstring(viu, "*/");
-    if(info_end>=0)
-        info.end = viu.begin+info_end+2;
-
-    viu.begin = info.end;
-    int params_start = sv_find_first(viu, '(');
-    StrViu type_name = {viu.begin, viu.begin + params_start};
-    viu.begin += params_start+1;
+    int params_start = sv_find_first(function, '(');
+    StrViu type_name = {function.begin, function.begin + params_start};
+    function.begin += params_start+1;
 
     type_name = sv_strip(type_name, ' ');
     int name_pos = sv_find_last(type_name, ' ');
@@ -175,16 +171,16 @@ bc_ParsedFunction bc_parse_function(StrViu viu) {
 
     StrViu name = {type_name.begin+name_pos+1, type_name.end};
 
-    viu = sv_eat_back_until(viu, ')');
-    viu.end--;
+    function = sv_eat_back_until(function, ')');
+    function.end--;
 
-    StrViuArray params = sv_split(viu, ',');
+    StrViuArray params = sv_split(function, ',');
 
     res.name = sv_heap_cpy(name);
     res.return_type = sv_heap_cpy(type);
 
     res.parameters = (bc_ParsedParameter*) calloc(params.size+1, sizeof(bc_ParsedParameter));
-    for(int i=0; i<params.size; i++)
+    for(size_t i=0; i<params.size; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 
     res.info = bc_parse_info_text(info);
