@@ -56,14 +56,16 @@ static void free0(void **mem) {
 
 /** free's all given adresses */
 #define FreeAll(...) {\
-    void **list = (void*[]) {__VA_ARGS__, NULL};\
-    while(*list) free(*list++);\
+    void *list[] = {__VA_ARGS__, NULL};\
+    void **it = list;\
+    while(*it) free(*it++);\
 }
 
 /** frees and sets all given addresses to NULL (must be the pointer to the addresses) */
 #define FreeAll0(...) {\
-    void **list = (void*[]) {__VA_ARGS__, NULL};\
-    while(*list) free0(*list++);\
+    void *list[] = {__VA_ARGS__, NULL};\
+    void **it = list;\
+    while(*it) free0((void **) *it++);\
 }
 
 #endif //UTILC_ALLOC_H
