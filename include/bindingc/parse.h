@@ -18,7 +18,7 @@ typedef struct {
     char *text;
     char *return_info;
     char *error_info;
-    bc_ParsedParameterInfo *parameterInfos; // ends with NULL
+    bc_ParsedParameterInfo *parameter_infos; // ends with NULL
 } bc_ParsedInfo;
 
 typedef struct {

@@ -13,6 +13,7 @@
  */
 int foo(int a, int b);
 
+
 int main() {
 
     const char *test = "/**\n"

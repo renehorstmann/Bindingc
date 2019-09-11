@@ -1,40 +1,29 @@
+#include <limits.h>
+
+#include "bindingc/utilc/alloc.h"
+
 #include "bindingc/parse.h"
 
-
 void bc_ParsedParameter_kill(bc_ParsedParameter *self) {
-    free(self->name);
-    free(self->type);
-    self->name = self->type = NULL;
+    FreeAll0(&self->name, &self->type)
 }
 
 void bc_ParsedParameterInfo_kill(bc_ParsedParameterInfo *self) {
-    free(self->name);
-    free(self->default_value);
-    free(self->info);
-    self->name = self->default_value = self->info = NULL;
+    FreeAll0(&self->name, &self->default_value, &self->info)
 }
 
 void bc_ParsedInfo_kill(bc_ParsedInfo *self) {
-    for (int p = 0; self->parameterInfos[p].name; p++)
-        bc_ParsedParameterInfo_kill(&self->parameterInfos[p]);
-    free(self->text);
-    free(self->return_info);
-    free(self->parameterInfos);
-    self->text = self->return_info = NULL;
-    self->parameterInfos = NULL;
+    for (int p = 0; self->parameter_infos[p].name; p++)
+        bc_ParsedParameterInfo_kill(&self->parameter_infos[p]);
+    FreeAll0(&self->text, &self->return_info, &self->parameter_infos)
 }
 
 void bc_ParsedFunction_kill(bc_ParsedFunction *self) {
     for (int p = 0; self->parameters[p].name; p++)
         bc_ParsedParameter_kill(&self->parameters[p]);
     bc_ParsedInfo_kill(&self->info);
-    free(self->name);
-    free(self->return_type);
-    free(self->parameters);
-    self->name = self->return_type = NULL;
-    self->parameters = NULL;
+    FreeAll0(&self->name, &self->return_type, &self->parameters)
 }
-
 
 
 bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
@@ -71,10 +60,10 @@ bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
     return res;
 }
 
-bc_ParsedInfo bc_parse_info_text(StrViu viu) {
-    bc_ParsedInfo res = {0};
-    res.parameterInfos = calloc(1, sizeof(bc_ParsedParameterInfo));
-    size_t text_size = 0;
+
+static char *get_info_text_on_heap_(StrViu viu) {
+    char *text = New0(char, 1);
+    size_t text_len = 0;
     while (viu.begin < viu.end) {
         viu = sv_lstrip(viu, ' ');
         viu = sv_lstrip(viu, '/');
@@ -82,49 +71,101 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
         StrViu next_line = sv_eat_until(viu, '\n');
         StrViu line = sv_strip((StrViu) {viu.begin, next_line.begin}, ' ');
         viu = next_line;
+
         if (sv_empty(line))
             continue;
-        if (*line.begin != '@') {
-            size_t len = sv_length(line);
-            res.text = realloc(res.text, text_size + len + 1);  // if this this returns NULL, we have bigger problems
-            sv_cpy(res.text + text_size, line);
-            res.text[text_size + len] = 0;
-            text_size += len + 1;
+
+        if(text_len>0)
+            text[text_len++] = ' ';   // space between each line
+
+        size_t line_len = sv_length(line);
+        text = ReNew(char, text, text_len + line_len + 1);
+        sv_cpy(text + text_len, line);
+        text_len += line_len;
+    }
+    return text;
+}
+
+bc_ParsedInfo bc_parse_info_text(StrViu viu) {
+    bc_ParsedInfo res = {0};
+    res.parameter_infos = New0(bc_ParsedParameterInfo, 1);
+
+    // remove leading and heading white spaces
+    viu = sv_strip(viu, ' ');
+    if (sv_empty(viu))
+        return res;
+
+    // if the last char is a /, remove smth like ****///
+    if (*(viu.end - 1) == '/') {
+        viu = sv_rstrip(viu, '/');
+        viu = sv_rstrip(viu, '*');
+    }
+    if (sv_empty(viu))
+        return res;
+
+    while (viu.begin < viu.end) {
+
+        int next;
+        {
+            viu.begin++;    //ignore first @
+            next = sv_find_first_cstring(viu, "@param");
+            next = next < 0 ? INT_MAX : next+1;
+
+            int next_return = sv_find_first_cstring(viu, "@return");
+            next_return = next_return < 0 ? INT_MAX : next_return+1;
+            if (next_return < next)
+                next = next_return;
+
+            int next_error = sv_find_first_cstring(viu, "@error");
+            next_error = next_error < 0 ? INT_MAX : next_error+1;
+            if (next_error < next)
+                next = next_error;
+
+            viu.begin--;
+            int next_end = sv_length(viu);
+            if (next_end < next)
+                next = next_end;
+        }
+
+        StrViu item = {viu.begin, viu.begin + next};
+        viu.begin = item.end;
+
+        if (*item.begin != '@') {
+            res.text = get_info_text_on_heap_(item);
             continue;
         }
-        line.begin++;
-        if (strncmp(line.begin, "return", 6) == 0) {
-            line.begin += 6;
-            int start = sv_find_first(line, ':');
-            if (start == -1)
-                start = sv_find_first(line, ' ');
-            line.begin += start + 1;
-            line = sv_lstrip(line, ' ');
-            int info_len = sv_length(line);
-            res.return_info = malloc(info_len + 1);
-            strncpy(res.return_info, line.begin, info_len);
-            res.return_info[info_len] = 0;
-            continue;
-        }
-        if(strncmp(line.begin, "error", 5) == 0) {
-            line.begin += 5;
-            line = sv_lstrip(line, ' ');
-            int info_len = sv_length(line);
-            res.error_info = malloc(info_len + 1);
-            strncpy(res.error_info, line.begin, info_len);
-            res.error_info[info_len] = 0;
-            continue;
-        }
-        if (strncmp(line.begin, "param", 5) == 0) {
-            line.begin += 5;
-            line = sv_lstrip(line, ' ');
+        item.begin++;
+        if (strncmp(item.begin, "param", 5) == 0) {
+            item.begin += 5;
+            item = sv_strip(item, ' ');
             int params = 0;
-            while (res.parameterInfos[params].name)
+            while (res.parameter_infos[params].name)
                 params++;
 
-            res.parameterInfos = realloc(res.parameterInfos, sizeof(bc_ParsedParameterInfo) * (params + 2));
-            res.parameterInfos[params] = bc_parse_parameter_info_text(line);
-            memset(&res.parameterInfos[params + 1], 0, sizeof(bc_ParsedParameterInfo));
+            res.parameter_infos = ReNew(bc_ParsedParameterInfo, res.parameter_infos, params + 2);  //2=new+end
+
+            char *item_text = get_info_text_on_heap_(item);
+            res.parameter_infos[params] = bc_parse_parameter_info_text(ToStrViu(item_text));
+            free(item_text);
+
+            // send end to 0
+            memset(&res.parameter_infos[params + 1], 0, sizeof(bc_ParsedParameterInfo));
+            continue;
+        }
+        if (strncmp(item.begin, "return", 6) == 0) {
+            item.begin += 6;
+            int start = sv_find_first(item, ':');
+            if (start == -1)
+                start = sv_find_first(item, ' ');
+            item.begin += start + 1;
+            item = sv_strip(item, ' ');
+            res.return_info = get_info_text_on_heap_(item);
+            continue;
+        }
+        if (strncmp(item.begin, "error", 5) == 0) {
+            item.begin += 5;
+            item = sv_strip(item, ' ');
+            res.error_info = get_info_text_on_heap_(item);
             continue;
         }
     }
@@ -161,15 +202,15 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
 
     int params_start = sv_find_first(function, '(');
     StrViu type_name = {function.begin, function.begin + params_start};
-    function.begin += params_start+1;
+    function.begin += params_start + 1;
 
     type_name = sv_strip(type_name, ' ');
     int name_pos = sv_find_last(type_name, ' ');
 
-    StrViu type = {type_name.begin, type_name.begin+name_pos};
+    StrViu type = {type_name.begin, type_name.begin + name_pos};
     type = sv_rstrip(type, ' ');
 
-    StrViu name = {type_name.begin+name_pos+1, type_name.end};
+    StrViu name = {type_name.begin + name_pos + 1, type_name.end};
 
     function = sv_eat_back_until(function, ')');
     function.end--;
@@ -179,15 +220,14 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
     res.name = sv_heap_cpy(name);
     res.return_type = sv_heap_cpy(type);
 
-    res.parameters = (bc_ParsedParameter*) calloc(params.size+1, sizeof(bc_ParsedParameter));
-    for(size_t i=0; i<params.size; i++)
+    res.parameters = (bc_ParsedParameter *) New0(bc_ParsedParameter, params.size + 1);
+    for (size_t i = 0; i < params.size; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 
     res.info = bc_parse_info_text(info);
 
     return res;
 }
-
 
 
 void bc_parse_file(bc_ParsedFunction **functions, StrViu filetext) {
