@@ -185,6 +185,47 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     return res;
 }
 
+
+char *bc_parse_type(StrViu viu) {
+    char *res;
+
+    StrViuArray components = {0};
+    while(viu.begin < viu.end) {
+        int next = sv_find_first_multiple(viu, "* ");
+        if(next<0) {
+            // rest of viu is last component
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = viu;
+            break;
+        } else if(next == 0) {
+            // should be a *
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = (StrViu) {viu.begin, viu.begin + 1};
+            viu.begin++;
+        } else {
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = (StrViu) {viu.begin, viu.begin + next};
+            viu.begin+=next;
+        }
+
+        viu = sv_lstrip(viu, ' ');
+    }
+
+    size_t length = components.size;   // spaces + \0
+    for(size_t i=0; i < components.size; i++)
+        length += sv_length(components.array[i]);
+
+    res = New(char, length);
+    char *fill_viu = res;
+    for(size_t i=0; i < components.size; i++) {
+        sv_cpy(fill_viu, components.array[i]);
+        fill_viu+=sv_length(components.array[i]);
+        *fill_viu++ = ' ';
+    }
+    res[length-1] = '\0';
+    return res;
+}
+
 bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     // string view such as "const char *name" or "string IN s", ...
     bc_ParsedParameter res = {0};
@@ -205,44 +246,10 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     name.begin++;
     type.end = name.begin;
     type = sv_rstrip(type, ' ');
+    assert(!sv_empty(type));
 
     res.name = sv_heap_cpy(name);
-
-    assert(!sv_empty(type));
-    StrViuArray components = {0};
-    while(type.begin < type.end) {
-        int next = sv_find_first_multiple(type, "* ");
-        if(next<0) {
-            // rest of type is last component
-            components.array = ReNew(StrViu, components.array, ++components.size);
-            components.array[components.size - 1] = type;
-            break;
-        } else if(next == 0) {
-            // should be a *
-            components.array = ReNew(StrViu, components.array, ++components.size);
-            components.array[components.size - 1] = (StrViu) {type.begin, type.begin + 1};
-            type.begin++;
-        } else {
-            components.array = ReNew(StrViu, components.array, ++components.size);
-            components.array[components.size - 1] = (StrViu) {type.begin, type.begin + next};
-            type.begin+=next;
-        }
-
-        type = sv_lstrip(type, ' ');
-    }
-
-    size_t length = components.size;   // spaces + \0
-    for(size_t i=0; i < components.size; i++)
-        length += sv_length(components.array[i]);
-
-    res.type = New(char, length);
-    char *fill_type = res.type;
-    for(size_t i=0; i < components.size; i++) {
-        sv_cpy(fill_type, components.array[i]);
-        fill_type+=sv_length(components.array[i]);
-        *fill_type++ = ' ';
-    }
-    res.type[length-1] = '\0';
+    res.type = bc_parse_type(type);
 
     return res;
 }
@@ -250,32 +257,41 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
 bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
     bc_ParsedFunction res = {0};
 
+    res.info = bc_parse_info_text(info);
 
     int params_start = sv_find_first(function, '(');
+    if(params_start<0)
+        return res;
+
     StrViu type_name = {function.begin, function.begin + params_start};
     function.begin += params_start + 1;
 
     type_name = sv_strip(type_name, ' ');
-    int name_pos = sv_find_last(type_name, ' ');
+    int name_pos = sv_find_last_multiple(type_name, "* ");
 
-    StrViu type = {type_name.begin, type_name.begin + name_pos};
+    StrViu type = {type_name.begin, type_name.begin + name_pos + 1};
     type = sv_rstrip(type, ' ');
 
     StrViu name = {type_name.begin + name_pos + 1, type_name.end};
 
     function = sv_eat_back_until(function, ')');
+    if(sv_empty(function))
+        return res;
+
     function.end--;
 
     StrViuArray params = sv_split(function, ',');
 
     res.name = sv_heap_cpy(name);
-    res.return_type = sv_heap_cpy(type);
+    res.return_type = bc_parse_type(type);
 
     res.parameters = (bc_ParsedParameter *) New0(bc_ParsedParameter, params.size + 1);
     for (size_t i = 0; i < params.size; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 
-    res.info = bc_parse_info_text(info);
+    // NULL if no parameters
+    if(!res.parameters[0].name)
+        Free0(res.parameters);
 
     return res;
 }

@@ -167,6 +167,50 @@ int main() {
             return error("bc_parse_parameter 5 failed");
     }
 
+    // function
+    {
+        bc_ParsedFunction res;
+        StrViu info = ToStrViu("");
+
+        viu = ToStrViu("");
+        res = bc_parse_function(info, viu);
+        if (res.name != NULL || res.return_type != NULL || res.parameters != NULL)
+            return error("bc_parse_function 0 failed");
+
+        viu = ToStrViu("void foo()");
+        res = bc_parse_function(info, viu);
+        if (str_not_equal(res.name, "foo")
+            || str_not_equal(res.return_type, "void")
+            || res.parameters != NULL)
+            return error("bc_parse_function 1 failed");
+
+        viu = ToStrViu("EXPORT \n\t int \t *bar()");
+        res = bc_parse_function(info, viu);
+        if (str_not_equal(res.name, "bar")
+            || str_not_equal(res.return_type, "EXPORT int *")
+            || res.parameters != NULL)
+            return error("bc_parse_function 2 failed");
+
+        viu = ToStrViu("struct P get_p(int a, const char*b)");
+        res = bc_parse_function(info, viu);
+        if (str_not_equal(res.name, "get_p")
+            || str_not_equal(res.return_type, "struct P")
+            || res.parameters == NULL)
+            return error("bc_parse_function 3.1 failed");
+        int params = 0;
+        while (res.parameters[params].name)
+            params++;
+        if (params != 2)
+            return error("bc_parse_function 3.2 failed");
+        if (str_not_equal(res.parameters[0].name, "a")
+            || str_not_equal(res.parameters[0].type, "int"))
+            return error("bc_parse_function 3.3 failed");
+        if (str_not_equal(res.parameters[1].name, "b")
+            || str_not_equal(res.parameters[1].type, "const char *"))
+            return error("bc_parse_function 3.4 failed");
+
+    }
+
     return 0;
 }
 
