@@ -50,22 +50,7 @@ static void free0(void **mem) {
 /** calls realloc and casts to the given type */
 #define TryReNew(type, mem, n) (type *) realloc((mem), (n) * sizeof(type))
 
-
 /** wrappper for free0 */
 #define Free0(mem) free0((void **)&(mem))
-
-/** free's all given adresses */
-#define FreeAll(...) {\
-    void *list[] = {__VA_ARGS__, NULL};\
-    void **it = list;\
-    while(*it) free(*it++);\
-}
-
-/** frees and sets all given addresses to NULL (must be the pointer to the addresses) */
-#define FreeAll0(...) {\
-    void *list[] = {__VA_ARGS__, NULL};\
-    void **it = list;\
-    while(*it) free0((void **) *it++);\
-}
 
 #endif //UTILC_ALLOC_H

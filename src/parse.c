@@ -5,24 +5,31 @@
 #include "bindingc/parse.h"
 
 void bc_ParsedParameter_kill(bc_ParsedParameter *self) {
-    FreeAll0(&self->name, &self->type)
+    Free0(self->name);
+    Free0(self->type);
 }
 
 void bc_ParsedParameterInfo_kill(bc_ParsedParameterInfo *self) {
-    FreeAll0(&self->name, &self->default_value, &self->info)
+    Free0(self->name);
+    Free0(self->default_value);
+    Free0(self->info);
 }
 
 void bc_ParsedInfo_kill(bc_ParsedInfo *self) {
     for (int p = 0; self->parameter_infos[p].name; p++)
         bc_ParsedParameterInfo_kill(&self->parameter_infos[p]);
-    FreeAll0(&self->text, &self->return_info, &self->parameter_infos)
+    Free0(self->text);
+    Free0(self->return_info);
+    Free0(self->parameter_infos);
 }
 
 void bc_ParsedFunction_kill(bc_ParsedFunction *self) {
     for (int p = 0; self->parameters[p].name; p++)
         bc_ParsedParameter_kill(&self->parameters[p]);
     bc_ParsedInfo_kill(&self->info);
-    FreeAll0(&self->name, &self->return_type, &self->parameters)
+    Free0(self->name);
+    Free0(self->return_type);
+    Free0(self->parameters);
 }
 
 
