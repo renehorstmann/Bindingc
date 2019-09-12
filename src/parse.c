@@ -95,7 +95,6 @@ static char *get_info_text_on_heap_(StrViu viu) {
 
 bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     bc_ParsedInfo res = {0};
-    res.parameter_infos = New0(bc_ParsedParameterInfo, 1);
 
     // remove leading and heading white spaces
     viu = sv_strip(viu, ' ');
@@ -110,6 +109,8 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     if (sv_empty(viu))
         return res;
 
+
+    res.parameter_infos = New0(bc_ParsedParameterInfo, 1);
     while (viu.begin < viu.end) {
 
         int next;
@@ -177,6 +178,10 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
         }
     }
 
+    // NULL if no parameters
+    if(!res.parameter_infos[0].name)
+        Free0(res.parameter_infos);
+
     return res;
 }
 
@@ -185,6 +190,9 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     bc_ParsedParameter res = {0};
 
     viu = sv_strip(viu, ' ');
+
+    if(sv_empty(viu))
+        return res;
 
     StrViu name = {viu.end, viu.end};
     StrViu type = {viu.begin};
@@ -199,7 +207,43 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     type = sv_rstrip(type, ' ');
 
     res.name = sv_heap_cpy(name);
-    res.type = sv_heap_cpy(type);
+
+    assert(!sv_empty(type));
+    StrViuArray components = {0};
+    while(type.begin < type.end) {
+        int next = sv_find_first_multiple(type, "* ");
+        if(next<0) {
+            // rest of type is last component
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = type;
+            break;
+        } else if(next == 0) {
+            // should be a *
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = (StrViu) {type.begin, type.begin + 1};
+            type.begin++;
+        } else {
+            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.array[components.size - 1] = (StrViu) {type.begin, type.begin + next};
+            type.begin+=next;
+        }
+
+        type = sv_lstrip(type, ' ');
+    }
+
+    size_t length = components.size;   // spaces + \0
+    for(size_t i=0; i < components.size; i++)
+        length += sv_length(components.array[i]);
+
+    res.type = New(char, length);
+    char *fill_type = res.type;
+    for(size_t i=0; i < components.size; i++) {
+        sv_cpy(fill_type, components.array[i]);
+        fill_type+=sv_length(components.array[i]);
+        *fill_type++ = ' ';
+    }
+    res.type[length-1] = '\0';
+
     return res;
 }
 

@@ -27,6 +27,11 @@ int main() {
     {
         bc_ParsedParameterInfo res;
 
+        viu = ToStrViu("");
+        res = bc_parse_parameter_info_text(viu);
+        if (res.name != NULL || res.default_value != NULL || res.info != NULL)
+            return error("bc_parse_parameter_info_text 0 failed");
+
         viu = ToStrViu("valves=16: The amount of engine valves per cylinder. ");
         res = bc_parse_parameter_info_text(viu);
         if (str_not_equal(res.name, "valves")
@@ -60,12 +65,17 @@ int main() {
     {
         bc_ParsedInfo res;
 
+        viu = ToStrViu("");
+        res = bc_parse_info_text(viu);
+        if (res.text != NULL || res.return_info != NULL || res.error_info != NULL || res.parameter_infos)
+            return error("bc_parse_parameter_info_text 0 failed");
+
         viu = ToStrViu("/** single line comment before the function */");
         res = bc_parse_info_text(viu);
         if (str_not_equal(res.text, "single line comment before the function")
             || str_not_equal(res.return_info, NULL)
             || str_not_equal(res.error_info, NULL)
-            || !res.parameter_infos || str_not_equal(res.parameter_infos[0].name, NULL))
+            || res.parameter_infos)
             return error("bc_parse_info_text 1 failed");
 
         viu = ToStrViu("//\tanother single line comment.\t\n");
@@ -73,7 +83,7 @@ int main() {
         if (str_not_equal(res.text, "another single line comment.")
             || str_not_equal(res.return_info, NULL)
             || str_not_equal(res.error_info, NULL)
-            || !res.parameter_infos || str_not_equal(res.parameter_infos[0].name, NULL))
+            || res.parameter_infos)
             return error("bc_parse_info_text 2 failed");
 
         viu = ToStrViu("/**\n"
@@ -94,9 +104,9 @@ int main() {
             || str_not_equal(res.error_info, "-1"))
             return error("bc_parse_info_text 3.1 failed");
         int params = 0;
-        while(res.parameter_infos[params].name)
+        while (res.parameter_infos[params].name)
             params++;
-        if(params != 4)
+        if (params != 4)
             return error("bc_parse_info_text 3.2 failed");
         if (str_not_equal(res.parameter_infos[0].name, "val")
             || str_not_equal(res.parameter_infos[0].default_value, NULL)
@@ -114,6 +124,47 @@ int main() {
             || str_not_equal(res.parameter_infos[3].default_value, "{0}")
             || str_not_equal(res.parameter_infos[3].info, "Multi line param explenation a*2=3"))
             return error("bc_parse_info_text 3.6 failed");
+    }
+
+
+    // parameter
+    {
+        bc_ParsedParameter res;
+
+        viu = ToStrViu("");
+        res = bc_parse_parameter(viu);
+        if (res.name != NULL || res.type != NULL)
+            return error("bc_parse_parameter 0 failed");
+
+        viu = ToStrViu("int a");
+        res = bc_parse_parameter(viu);
+        if (str_not_equal(res.name, "a")
+            || str_not_equal(res.type, "int"))
+            return error("bc_parse_parameter 1 failed");
+
+        viu = ToStrViu("\t char  * str_ing\n");
+        res = bc_parse_parameter(viu);
+        if (str_not_equal(res.name, "str_ing")
+            || str_not_equal(res.type, "char *"))
+            return error("bc_parse_parameter 2 failed");
+
+        viu = ToStrViu("\t \nchar \n \t * \n * str_array\n");
+        res = bc_parse_parameter(viu);
+        if (str_not_equal(res.name, "str_array")
+            || str_not_equal(res.type, "char * *"))
+            return error("bc_parse_parameter 3 failed");
+
+        viu = ToStrViu("const int **const** const ptr_fun");
+        res = bc_parse_parameter(viu);
+        if (str_not_equal(res.name, "ptr_fun")
+            || str_not_equal(res.type, "const int * * const * * const"))
+            return error("bc_parse_parameter 4 failed");
+
+        viu = ToStrViu("OUT Cloud *cloud");
+        res = bc_parse_parameter(viu);
+        if (str_not_equal(res.name, "cloud")
+            || str_not_equal(res.type, "OUT Cloud *"))
+            return error("bc_parse_parameter 5 failed");
     }
 
     return 0;
