@@ -257,6 +257,40 @@ static StrViu sv_eat_back_until_multiple(StrViu viu, const char *multiple_chars)
     return viu;
 }
 
+/** @returns: The number of the char search, found in viu (doesn't use isspace for spaces) */
+static int sv_count(StrViu viu, char search) {
+    int cnt = 0;
+    while(viu.begin < viu.end) {
+        if(*viu.begin++ == search)
+            cnt++;
+    }
+    return cnt;
+}
+
+/** @returns: The number of the StrViu search, found in viu (doesn't use isspace for spaces) */
+static int sv_count_sv(StrViu viu, StrViu search) {
+    int cnt = 0;
+    size_t search_len = sv_length(search);
+    while (viu.begin <= viu.end - search_len) {
+        if (strncmp(viu.begin++, search.begin, search_len) == 0)
+            cnt++;
+    }
+    return cnt;
+}
+
+/** @returns: The number of the cstring search, found in viu (doesn't use isspace for spaces) */
+static int sv_count_cstring(StrViu viu, const char *search) {
+    return sv_count_sv(viu, ToStrViu(search));
+}
+
+/** @returns: The number of each char in multiple_chars, found in viu (doesn't use isspace for spaces) */
+static int sv_count_multiple(StrViu viu, const char *multiple_chars) {
+    int cnt = 0;
+    while(*multiple_chars)
+        cnt += sv_count(viu, *multiple_chars++);
+    return cnt;
+}
+
 /** Replaces each char old with replacement in the StrViu viu */
 static void sv_replace(StrViu viu, char old, char replacement) {
     while (viu.begin < viu.end) {
