@@ -28,7 +28,7 @@ static bool sv_empty(StrViu viu) {
 
 /** @returns: the length of the StrViu */
 static size_t sv_length(StrViu viu) {
-    return viu.end - viu.begin;
+    return (viu.end > viu.begin) ? (viu.end - viu.begin) : 0;
 }
 
 /** @returns: A new StrViu, based on viu, but without the leading chars of strip (space -> isspace()) */
