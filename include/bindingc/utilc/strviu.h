@@ -257,17 +257,24 @@ static StrViu sv_eat_back_until_multiple(StrViu viu, const char *multiple_chars)
     return viu;
 }
 
-/** @returns: The number of the char search, found in viu (doesn't use isspace for spaces) */
+/** @returns: The number of the char search, found in viu */
 static int sv_count(StrViu viu, char search) {
     int cnt = 0;
-    while(viu.begin < viu.end) {
-        if(*viu.begin++ == search)
-            cnt++;
+    if(search == ' ') {
+        while (viu.begin < viu.end) {
+            if (isspace(*viu.begin++))
+                cnt++;
+        }
+    } else {
+        while (viu.begin < viu.end) {
+            if (*viu.begin++ == search)
+                cnt++;
+        }
     }
     return cnt;
 }
 
-/** @returns: The number of the StrViu search, found in viu (doesn't use isspace for spaces) */
+/** @returns: The number of the StrViu search, found in viu */
 static int sv_count_sv(StrViu viu, StrViu search) {
     int cnt = 0;
     size_t search_len = sv_length(search);
@@ -278,12 +285,12 @@ static int sv_count_sv(StrViu viu, StrViu search) {
     return cnt;
 }
 
-/** @returns: The number of the cstring search, found in viu (doesn't use isspace for spaces) */
+/** @returns: The number of the cstring search, found in viu */
 static int sv_count_cstring(StrViu viu, const char *search) {
     return sv_count_sv(viu, ToStrViu(search));
 }
 
-/** @returns: The number of each char in multiple_chars, found in viu (doesn't use isspace for spaces) */
+/** @returns: The number of each char in multiple_chars, found in viu */
 static int sv_count_multiple(StrViu viu, const char *multiple_chars) {
     int cnt = 0;
     while(*multiple_chars)
