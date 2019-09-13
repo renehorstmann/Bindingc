@@ -21,6 +21,13 @@ typedef struct {
     size_t size;
 } StrViuArray;
 
+/** StrViuArray destructor frees the array and sets to 0 */
+static void StrViuArray_kill(StrViuArray *self) {
+    free(self->array);
+    self->array = NULL;
+    self->size = 0;
+}
+
 /** @returns: true if the StrViu is empty (length==0) */
 static bool sv_empty(StrViu viu) {
     return viu.begin >= viu.end;
