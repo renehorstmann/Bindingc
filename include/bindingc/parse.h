@@ -45,6 +45,6 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu);
 
 bc_ParsedFunction bc_parse_function(StrViu info, StrViu function);
 
-void bc_parse_file(bc_ParsedFunction **functions, StrViu filetext);
+bc_ParsedFunction *bc_parse_file(StrViu filetext);
 
 #endif //BINDINGC_PARSE_H

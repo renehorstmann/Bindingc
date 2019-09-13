@@ -7,7 +7,10 @@ set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -march=native)  # march=native for best perfo
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-long-long -pedantic -Wno-unused-function")
 
 
-add_library(bindingc src/parse.c)
+add_library(bindingc
+        src/parse.c
+        src/parse_file.c
+        )
 target_include_directories(bindingc PUBLIC include)
 
 

@@ -296,8 +296,30 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
     return res;
 }
 
+#define MULL /*
+ *
+ */
 
-void bc_parse_file(bc_ParsedFunction **functions, StrViu filetext) {
 
-
+static StrViu parse_comment_(char *start, char *max_end) {
+    StrViu viu = {start, max_end};
+    if(start[1] == '*') {
+        // block comment
+        int end_index = sv_find_first_cstring(viu, "*/");
+        return (StrViu) {start, start+end_index+2};
+    } else {
+        int end_index = 0;
+        for(;;) {
+            int index = sv_find_first(viu, '\n');
+            if(index < 0)
+                return (StrViu) {start, max_end};
+            end_index += index;
+            viu.begin += index;
+            viu = sv_lstrip(viu, ' ');
+            if(sv_length(viu)<2)
+                return (StrViu) {start, max_end};
+            if (strncmp(viu.begin, "//", 2) != 0)
+                return (StrViu) {start, start + end_index};
+        }
+    }
 }

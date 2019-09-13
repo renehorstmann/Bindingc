@@ -5,10 +5,29 @@
 
 int error(const char *text) {
     fputs(text, stderr);
+    {
+        int a = 0;
+        a++;
+    }
     return 1;
 }
 
+int a = 3;
+int (b);
+static void (*fun_ptr);
+typedef int zahl;
+typedef char *string;
+struct A {
+    int a;
+};
+typedef struct A B;
+typedef struct {
+    int b;
+} C;
 
+/**
+  * test
+  */
 bool str_not_equal(const char *a, const char *b) {
     // same pointer or both NULL
     if (a == b)
@@ -216,7 +235,7 @@ int main() {
         bc_ParsedFunction *res;
 
         char *buffer = 0;
-        FILE *f = fopen("filetest1.txt", "r");
+        FILE *f = fopen("data/filetest1.h", "r");
 
         if (f) {
             fseek(f, 0, SEEK_END);
@@ -227,10 +246,6 @@ int main() {
                 fread(buffer, 1, length, f);
             }
             fclose(f);
-        }
-
-        if (buffer) {
-            res = bc_parse_file(ToStrViu(buffer));
         }
     }
 
