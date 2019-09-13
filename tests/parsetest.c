@@ -231,6 +231,7 @@ int main() {
 
         if (buffer) {
             res = bc_parse_file(ToStrViu(buffer));
+            puts("test");
         }
     }
 
