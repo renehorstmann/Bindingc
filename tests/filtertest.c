@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "bindingc/parse.h"
+#include "bindingc/sort.h"
 #include "bindingc/filter.h"
 
 int error(const char *text) {
@@ -30,17 +31,20 @@ int main() {
     if(!file)
         return error("couldnt open file");
 
-    bc_ParsedFunctionArray functions = bc_parse_file(ToStrViu(file));
-    if(functions.functions_len != 8)
+    bc_ParsedFunctionArray parsed_functions = bc_parse_file(ToStrViu(file));
+    if(parsed_functions.size != 8)
         return error("bc_parse_file failed");
 
-    bc_filter_non_static(&functions);
-    if(functions.functions_len != 7)
-        return error("bc_filter_non_static failed");
+    bc_FunctionArray functions = bc_get_function_array_without_paramaters(&parsed_functions);
 
-    bc_filter_name_prefix(&functions, "bc_");
-    if(functions.functions_len != 6)
-        return error("bc_filter_name_prefix failed");
+    functions = bc_filter_function_non_static(functions, true);
+    if(functions.size != 7)
+        return error("bc_filter_function_non_static failed");
+
+    functions = bc_filter_function_name_prefix(functions, "bc_", true);
+    if(functions.size != 6)
+        return error("bc_filter_function_name_prefix failed");
+
 
 
     return 0;

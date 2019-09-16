@@ -167,9 +167,9 @@ bc_ParsedFunctionArray bc_parse_file(StrViu filetext) {
 
     StrViuArray functions = get_functions(viu);
     StrViuArray comments = {New(StrViu, functions.size), functions.size};
-    res.functions_len = functions.size;
-    if(res.functions_len>0)
-        res.functions = New0(bc_ParsedFunction, functions.size);
+    res.size = functions.size;
+    if(res.size > 0)
+        res.array = New0(bc_ParsedFunction, functions.size);
 
     for (size_t i = 0; i < functions.size; i++) {
         size_t decl_start_pos = functions.array[i].begin - copy_function;
@@ -189,7 +189,7 @@ bc_ParsedFunctionArray bc_parse_file(StrViu filetext) {
     }
 
     for(size_t i=0; i<functions.size; i++)
-        res.functions[i] = bc_parse_function(comments.array[i], functions.array[i]);
+        res.array[i] = bc_parse_function(comments.array[i], functions.array[i]);
 
     free(copy_function);
     StrViuArray_kill(&functions);

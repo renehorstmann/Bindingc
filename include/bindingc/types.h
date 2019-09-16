@@ -15,29 +15,39 @@ typedef struct {
 } bc_Parameter;
 
 typedef struct {
+    bc_Parameter *array;
+    size_t size;
+} bc_ParameterArray;
+
+typedef struct {
     char name[BC_T_SHORT_STR];
     char return_type[BC_T_SHORT_STR];
     char info[BC_T_LONG_STR];
     char return_info[BC_T_MEDIUM_STR];
     char error_info[BC_T_MEDIUM_STR];
-    bc_Parameter *output_parameters;
-    size_t output_parameters_len;
-    bc_Parameter *input_parameters;
-    size_t input_parameters_len;
-    bc_Parameter *optional_parameters;
-    size_t optional_parameters_len;
+    bc_ParameterArray output_parameters;
+    bc_ParameterArray input_parameters;
+    bc_ParameterArray optional_parameters;
 } bc_Function;
+
+typedef struct {
+    bc_Function *array;
+    size_t size;
+} bc_FunctionArray;
 
 typedef struct {
     char name[BC_T_SHORT_STR];
     char info[BC_T_LONG_STR];
     bc_Function constructor;
     bc_Function destructor;
-    bc_Function *methods;
-    size_t methods_len;
+    bc_FunctionArray methods;
 } bc_Class;
 
+void bc_ParameterArray_kill(bc_ParameterArray *self);
+
 void bc_Function_kill(bc_Function *self);
+
+void bc_FunctionArray_kill(bc_FunctionArray *self);
 
 void bc_Class_kill(bc_Class *self);
 

@@ -226,7 +226,7 @@ int main() {
         char *filetext = open_file_as_string("filetest1.txt");
         if (filetext) {
             res = bc_parse_file(ToStrViu(filetext));
-            printf("%s\n", res.functions[0].name);
+            printf("%s\n", res.array[0].name);
             puts("test");
         }
     }

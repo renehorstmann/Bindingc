@@ -15,8 +15,8 @@ void bc_ParsedFunction_kill(bc_ParsedFunction *self) {
 }
 
 void bc_ParsedFunctionArray_kill(bc_ParsedFunctionArray *self) {
-    for(size_t f=0; f<self->functions_len; f++)
-        bc_ParsedFunction_kill(&self->functions[f]);
-    self->functions_len = 0;
-    Free0(self->functions);
+    for(size_t f=0; f<self->size; f++)
+        bc_ParsedFunction_kill(&self->array[f]);
+    self->size = 0;
+    Free0(self->array);
 }

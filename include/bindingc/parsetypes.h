@@ -33,8 +33,8 @@ typedef struct {
 } bc_ParsedFunction;
 
 typedef struct {
-    bc_ParsedFunction *functions;
-    size_t functions_len;
+    bc_ParsedFunction *array;
+    size_t size;
 } bc_ParsedFunctionArray;
 
 void bc_ParsedInfo_kill(bc_ParsedInfo *self);

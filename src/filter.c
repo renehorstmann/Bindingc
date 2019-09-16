@@ -10,51 +10,94 @@
 DynArray(int, IntArray)
 
 
-static void apply_indices(bc_ParsedFunctionArray *inout_array, IntArray indices) {
-    int kill_id = 0;
-    for(size_t i=0; i<indices.size; i++) {
-        while(kill_id < indices.array[i])
-            bc_ParsedFunction_kill(&inout_array->functions[kill_id++]);
-        kill_id = indices.array[i] + 1;
-    }
-
-    bc_ParsedFunction *filtered = NULL;
-    if(indices.size>0) {
-        filtered = New(bc_ParsedFunction, indices.size);
+static bc_FunctionArray apply_indices_function_array(bc_FunctionArray array, IntArray indices) {
+    bc_FunctionArray res = {0};
+    if (indices.size > 0) {
+        res.array = New0(bc_Function, indices.size);
+        res.size = indices.size;
         for (size_t i = 0; i < indices.size; i++)
-            filtered[i] = inout_array->functions[indices.array[i]];
+            res.array[i] = array.array[indices.array[i]];
     }
-    free(inout_array->functions);
-    inout_array->functions = filtered;
-    inout_array->functions_len = indices.size;
+    return res;
+}
+
+static bc_ParameterArray apply_indices_parameter_array(bc_ParameterArray array, IntArray indices) {
+    bc_ParameterArray res = {0};
+    if (indices.size > 0) {
+        res.array = New0(bc_Parameter, indices.size);
+        res.size = indices.size;
+        for (size_t i = 0; i < indices.size; i++)
+            res.array[i] = array.array[indices.array[i]];
+    }
+    return res;
 }
 
 
-void bc_filter_non_static(bc_ParsedFunctionArray *inout_array) {
+bc_FunctionArray bc_filter_function_non_static(bc_FunctionArray array, bool free_array) {
     IntArray indices = {0};
-    IntArray_set_capacity(&indices, inout_array->functions_len);
+    IntArray_set_capacity(&indices, array.size);
 
-    for(size_t i=0; i < inout_array->functions_len; i++) {
-        if(strstr(inout_array->functions[i].return_type, "static") == NULL)
+    for (size_t i = 0; i < array.size; i++) {
+        if (strstr(array.array[i].return_type, "static") == NULL)
             IntArray_push(&indices, i);
     }
 
-    apply_indices(inout_array, indices);
+    bc_FunctionArray res = apply_indices_function_array(array, indices);
     IntArray_kill(&indices);
+    if (free_array)
+        bc_FunctionArray_kill(&array);
+    return res;
 }
 
 
-void bc_filter_name_prefix(bc_ParsedFunctionArray *inout_array, const char *name_prefix) {
+bc_FunctionArray bc_filter_function_name_prefix(bc_FunctionArray array, const char *name_prefix, bool free_array) {
     IntArray indices = {0};
-    IntArray_set_capacity(&indices, inout_array->functions_len);
+    IntArray_set_capacity(&indices, array.size);
 
-    for(size_t i=0; i < inout_array->functions_len; i++) {
-        if(strncmp(inout_array->functions[i].name, name_prefix, strlen(name_prefix)) == 0)
+    for (size_t i = 0; i < array.size; i++) {
+        if (strncmp(array.array[i].name, name_prefix, strlen(name_prefix)) == 0)
             IntArray_push(&indices, i);
     }
 
-    apply_indices(inout_array, indices);
+    bc_FunctionArray res = apply_indices_function_array(array, indices);
     IntArray_kill(&indices);
+    if (free_array)
+        bc_FunctionArray_kill(&array);
+    return res;
 }
 
+bc_ParameterArray bc_filter_parameter_name_prefix(bc_ParameterArray array, const char *name_prefix, bool free_array) {
+    IntArray indices = {0};
+    IntArray_set_capacity(&indices, array.size);
 
+    for (size_t i = 0; i < array.size; i++) {
+        if (strncmp(array.array[i].name, name_prefix, strlen(name_prefix)) == 0)
+            IntArray_push(&indices, i);
+    }
+
+    bc_ParameterArray res = apply_indices_parameter_array(array, indices);
+    IntArray_kill(&indices);
+    if (free_array)
+        bc_ParameterArray_kill(&array);
+    return res;
+}
+
+bc_ParameterArray bc_filter_parameter_diff(bc_ParameterArray a, bc_ParameterArray b) {
+    bc_ParameterArray res = {0};
+    if (a.size > 0) {
+        res.array = New0(bc_Parameter, a.size);
+        for (size_t a_i = 0; a_i < a.size; a_i++) {
+            bool found = false;
+            for (size_t b_i = 0; b_i < b.size; b_i++) {
+                if(strcmp(a.array[a_i].name, b.array[b_i].name) == 0) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+                res.array[res.size++] = a.array[a_i];
+        }
+    }
+
+    return res;
+}

@@ -4,23 +4,27 @@
 #include "bindingc/types.h"
 
 
+void bc_ParameterArray_kill(bc_ParameterArray *self) {
+    Free0(self->array);
+    self->size = 0;
+}
 
 void bc_Function_kill(bc_Function *self) {
-    Free0(self->output_parameters);
-    self->output_parameters_len = 0;
-    Free0(self->input_parameters);
-    self->input_parameters_len = 0;
-    Free0(self->optional_parameters);
-    self->optional_parameters_len = 0;
+    bc_ParameterArray_kill(&self->output_parameters);
+    bc_ParameterArray_kill(&self->input_parameters);
+    bc_ParameterArray_kill(&self->optional_parameters);
+}
+
+void bc_FunctionArray_kill(bc_FunctionArray *self) {
+    for(size_t i=0; i<self->size; i++)
+        bc_Function_kill(&self->array[i]);
+    Free0(self->array);
+    self->size = 0;
 }
 
 void bc_Class_kill(bc_Class *self) {
     bc_Function_kill(&self->constructor);
     bc_Function_kill(&self->destructor);
-    for(size_t i=0; i<self->methods_len; i++) {
-        bc_Function_kill(&self->methods[i]);
-    }
-    Free0(self->methods);
-    self->methods_len = 0;
+    bc_FunctionArray_kill(&self->methods);
 }
 
