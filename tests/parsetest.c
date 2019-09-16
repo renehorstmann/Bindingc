@@ -89,7 +89,7 @@ int main() {
         if (str_not_equal(res.text, "single line comment before the function")
             || str_not_equal(res.return_info, NULL)
             || str_not_equal(res.error_info, NULL)
-            || res.parameter_infos)
+            || res.parameter_infos_len != 0)
             return error("bc_parse_info_text 1 failed");
 
         viu = ToStrViu("//\tanother single line comment.\t\n");
@@ -97,7 +97,7 @@ int main() {
         if (str_not_equal(res.text, "another single line comment.")
             || str_not_equal(res.return_info, NULL)
             || str_not_equal(res.error_info, NULL)
-            || res.parameter_infos)
+            || res.parameter_infos_len != 0)
             return error("bc_parse_info_text 2 failed");
 
         viu = ToStrViu("/**\n"
@@ -192,14 +192,14 @@ int main() {
         res = bc_parse_function(info, viu);
         if (str_not_equal(res.name, "foo")
             || str_not_equal(res.return_type, "void")
-            || res.parameters != NULL)
+            || res.parameters_len != 0)
             return error("bc_parse_function 1 failed");
 
         viu = ToStrViu("EXPORT \n\t int \t *bar()");
         res = bc_parse_function(info, viu);
         if (str_not_equal(res.name, "bar")
             || str_not_equal(res.return_type, "EXPORT int *")
-            || res.parameters != NULL)
+            || res.parameters_len != 0)
             return error("bc_parse_function 2 failed");
 
         viu = ToStrViu("struct P get_p(int a, const char*b)");

@@ -11,7 +11,7 @@ add_library(bindingc
         src/parsetypes.c
         src/parse.c
         src/parsefile.c
-#        src/filter.c
+        src/filter.c
         )
 target_include_directories(bindingc PUBLIC include)
 
@@ -26,17 +26,17 @@ enable_testing()
 # Define the executable test
 add_executable(main tests/main.c)
 add_executable(testparse tests/parsetest.c)
-#add_executable(testfilter tests/filtertest.c)
+add_executable(testfilter tests/filtertest.c)
 
 # link to the library
 target_link_libraries(main bindingc)
 target_link_libraries(testparse bindingc)
-#target_link_libraries(testfilter bindingc)
+target_link_libraries(testfilter bindingc)
 
 
 # add the executable as test
 add_test(TestParse testparse)
-#add_test(TestFilter testfilter)
+add_test(TestFilter testfilter)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tests/data/
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
