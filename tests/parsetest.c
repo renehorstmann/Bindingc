@@ -8,7 +8,6 @@ int error(const char *text) {
     return 1;
 }
 
-
 bool str_not_equal(const char *a, const char *b) {
     // same pointer or both NULL
     if (a == b)
@@ -17,6 +16,21 @@ bool str_not_equal(const char *a, const char *b) {
     if (!a || !b)
         return true;
     return strcmp(a, b) != 0;
+}
+
+char *open_file_as_string(const char *filename) {
+    char *text = NULL;
+    FILE *file = fopen(filename, "r");
+    if (file) {
+        fseek(file, 0, SEEK_END);
+        long length = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        text = malloc(length);
+        if (text)
+            fread(text, 1, length, file);
+        fclose(file);
+    }
+    return text;
 }
 
 int main() {
@@ -103,10 +117,7 @@ int main() {
             || str_not_equal(res.return_info, "the real result")
             || str_not_equal(res.error_info, "-1"))
             return error("bc_parse_info_text 3.1 failed");
-        int params = 0;
-        while (res.parameter_infos[params].name)
-            params++;
-        if (params != 4)
+        if (res.parameter_infos_len != 4)
             return error("bc_parse_info_text 3.2 failed");
         if (str_not_equal(res.parameter_infos[0].name, "val")
             || str_not_equal(res.parameter_infos[0].default_value, NULL)
@@ -197,10 +208,7 @@ int main() {
             || str_not_equal(res.return_type, "struct P")
             || res.parameters == NULL)
             return error("bc_parse_function 3.1 failed");
-        int params = 0;
-        while (res.parameters[params].name)
-            params++;
-        if (params != 2)
+        if (res.parameters_len != 2)
             return error("bc_parse_function 3.2 failed");
         if (str_not_equal(res.parameters[0].name, "a")
             || str_not_equal(res.parameters[0].type, "int"))
@@ -213,24 +221,12 @@ int main() {
 
     {
         // file
-        bc_ParsedFunction *res;
+        bc_ParsedFunctionArray res;
 
-        char *buffer = 0;
-        FILE *f = fopen("filetest1.txt", "r");
-
-        if (f) {
-            fseek(f, 0, SEEK_END);
-            long length = ftell(f);
-            fseek(f, 0, SEEK_SET);
-            buffer = malloc(length);
-            if (buffer) {
-                fread(buffer, 1, length, f);
-            }
-            fclose(f);
-        }
-
-        if (buffer) {
-            res = bc_parse_file(ToStrViu(buffer));
+        char *filetext = open_file_as_string("filetest1.txt");
+        if (filetext) {
+            res = bc_parse_file(ToStrViu(filetext));
+            printf("%s\n", res.functions[0].name);
             puts("test");
         }
     }

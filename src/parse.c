@@ -4,35 +4,6 @@
 
 #include "bindingc/parse.h"
 
-void bc_ParsedParameter_kill(bc_ParsedParameter *self) {
-    Free0(self->name);
-    Free0(self->type);
-}
-
-void bc_ParsedParameterInfo_kill(bc_ParsedParameterInfo *self) {
-    Free0(self->name);
-    Free0(self->default_value);
-    Free0(self->info);
-}
-
-void bc_ParsedInfo_kill(bc_ParsedInfo *self) {
-    for (int p = 0; self->parameter_infos[p].name; p++)
-        bc_ParsedParameterInfo_kill(&self->parameter_infos[p]);
-    Free0(self->text);
-    Free0(self->return_info);
-    Free0(self->parameter_infos);
-}
-
-void bc_ParsedFunction_kill(bc_ParsedFunction *self) {
-    for (int p = 0; self->parameters[p].name; p++)
-        bc_ParsedParameter_kill(&self->parameters[p]);
-    bc_ParsedInfo_kill(&self->info);
-    Free0(self->name);
-    Free0(self->return_type);
-    Free0(self->parameters);
-}
-
-
 bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
     // string view such as "name=\"Peter\": the name of some guy."
     bc_ParsedParameterInfo res = {0};
@@ -109,8 +80,6 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
     if (sv_empty(viu))
         return res;
 
-
-    res.parameter_infos = New0(bc_ParsedParameterInfo, 1);
     while (viu.begin < viu.end) {
 
         int next;
@@ -146,18 +115,12 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
         if (strncmp(item.begin, "param", 5) == 0) {
             item.begin += 5;
             item = sv_strip(item, ' ');
-            int params = 0;
-            while (res.parameter_infos[params].name)
-                params++;
 
-            res.parameter_infos = ReNew(bc_ParsedParameterInfo, res.parameter_infos, params + 2);  //2=new+end
+            res.parameter_infos = ReNew(bc_ParsedParameterInfo, res.parameter_infos, ++res.parameter_infos_len);
 
             char *item_text = get_info_text_on_heap_(item);
-            res.parameter_infos[params] = bc_parse_parameter_info_text(ToStrViu(item_text));
+            res.parameter_infos[res.parameter_infos_len-1] = bc_parse_parameter_info_text(ToStrViu(item_text));
             free(item_text);
-
-            // send end to 0
-            memset(&res.parameter_infos[params + 1], 0, sizeof(bc_ParsedParameterInfo));
             continue;
         }
         if (strncmp(item.begin, "return", 6) == 0) {
@@ -177,10 +140,6 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
             continue;
         }
     }
-
-    // NULL if no parameters
-    if(!res.parameter_infos[0].name)
-        Free0(res.parameter_infos);
 
     return res;
 }
@@ -285,20 +244,14 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
     res.name = sv_heap_cpy(name);
     res.return_type = bc_parse_type(type);
 
-    res.parameters = (bc_ParsedParameter *) New0(bc_ParsedParameter, params.size + 1);
-    for (size_t i = 0; i < params.size; i++)
+    res.parameters_len = params.size;
+    if(res.parameters_len>0)
+        res.parameters = (bc_ParsedParameter *) New(bc_ParsedParameter, res.parameters_len);
+    for (size_t i = 0; i < res.parameters_len; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
-
-    // NULL if no parameters
-    if(!res.parameters[0].name)
-        Free0(res.parameters);
 
     return res;
 }
-
-#define MULL /*
- *
- */
 
 
 static StrViu parse_comment_(char *start, char *max_end) {

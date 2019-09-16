@@ -154,8 +154,8 @@ static StrViuArray get_functions(StrViu viu) {
     return functions;
 }
 
-bc_ParsedFunction *bc_parse_file(StrViu filetext) {
-    bc_ParsedFunction *res = NULL;
+bc_ParsedFunctionArray bc_parse_file(StrViu filetext) {
+    bc_ParsedFunctionArray res = {0};
 
     char *copy_function = sv_heap_cpy(filetext);
     StrViu viu = {copy_function, copy_function + sv_length(filetext)};
@@ -167,7 +167,9 @@ bc_ParsedFunction *bc_parse_file(StrViu filetext) {
 
     StrViuArray functions = get_functions(viu);
     StrViuArray comments = {New(StrViu, functions.size), functions.size};
-    res = New0(bc_ParsedFunction, functions.size+1);    // + end 0
+    res.functions_len = functions.size;
+    if(res.functions_len>0)
+        res.functions = New0(bc_ParsedFunction, functions.size);
 
     for (size_t i = 0; i < functions.size; i++) {
         size_t decl_start_pos = functions.array[i].begin - copy_function;
@@ -187,7 +189,7 @@ bc_ParsedFunction *bc_parse_file(StrViu filetext) {
     }
 
     for(size_t i=0; i<functions.size; i++)
-        res[i] = bc_parse_function(comments.array[i], functions.array[i]);
+        res.functions[i] = bc_parse_function(comments.array[i], functions.array[i]);
 
     free(copy_function);
     StrViuArray_kill(&functions);
