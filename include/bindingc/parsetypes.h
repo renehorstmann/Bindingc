@@ -1,32 +1,32 @@
 #ifndef BINDINGC_PARSETYPES_H
 #define BINDINGC_PARSETYPES_H
 
-#define BC_MAX_SSTR_LEN 80
-#define BC_MAX_MSTR_LEN 160
-#define BC_MAX_LSTR_LEN 320
+#define BC_PT_SHORT_STR 80
+#define BC_PT_MEDIUM_STR 160
+#define BC_PT_LONG_STR 320
 
 typedef struct {
-    char name[BC_MAX_SSTR_LEN];
-    char type[BC_MAX_SSTR_LEN];
+    char name[BC_PT_SHORT_STR];
+    char type[BC_PT_SHORT_STR];
 } bc_ParsedParameter;
 
 typedef struct {
-    char name[BC_MAX_SSTR_LEN];
-    char default_value[BC_MAX_SSTR_LEN];
-    char info[BC_MAX_MSTR_LEN];
+    char name[BC_PT_SHORT_STR];
+    char default_value[BC_PT_SHORT_STR];
+    char info[BC_PT_MEDIUM_STR];
 } bc_ParsedParameterInfo;
 
 typedef struct {
-    char text[BC_MAX_LSTR_LEN];
-    char return_info[BC_MAX_MSTR_LEN];
-    char error_info[BC_MAX_MSTR_LEN];
+    char text[BC_PT_LONG_STR];
+    char return_info[BC_PT_MEDIUM_STR];
+    char error_info[BC_PT_MEDIUM_STR];
     bc_ParsedParameterInfo *parameter_infos;
     size_t parameter_infos_len;
 } bc_ParsedInfo;
 
 typedef struct {
-    char name[BC_MAX_SSTR_LEN];
-    char return_type[BC_MAX_SSTR_LEN];
+    char name[BC_PT_SHORT_STR];
+    char return_type[BC_PT_SHORT_STR];
     bc_ParsedParameter *parameters;
     size_t parameters_len;
     bc_ParsedInfo info;
