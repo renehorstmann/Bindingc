@@ -1,17 +1,15 @@
 #ifndef BINDINGC_SORTEDTYPES_H
 #define BINDINGC_SORTEDTYPES_H
 
-#include <glob.h>
-
-#define BC_T_SHORT_STR 80
-#define BC_T_MEDIUM_STR 160
-#define BC_T_LONG_STR 320
+typedef char ShortString[80];
+typedef char String[160];
+typedef char LongString[320];
 
 typedef struct {
-    char name[BC_T_SHORT_STR];
-    char type[BC_T_SHORT_STR];
-    char default_value[BC_T_SHORT_STR];
-    char info[BC_T_MEDIUM_STR];
+    ShortString name;
+    ShortString type;
+    ShortString default_value;
+    String info;
 } bc_Parameter;
 
 typedef struct {
@@ -20,11 +18,11 @@ typedef struct {
 } bc_ParameterArray;
 
 typedef struct {
-    char name[BC_T_SHORT_STR];
-    char return_type[BC_T_SHORT_STR];
-    char info[BC_T_LONG_STR];
-    char return_info[BC_T_MEDIUM_STR];
-    char error_info[BC_T_MEDIUM_STR];
+    ShortString name;
+    ShortString return_type;
+    LongString info;
+    String return_info;
+    String error_info;
     bc_ParameterArray output_parameters;
     bc_ParameterArray input_parameters;
     bc_ParameterArray optional_parameters;
@@ -36,8 +34,8 @@ typedef struct {
 } bc_FunctionArray;
 
 typedef struct {
-    char name[BC_T_SHORT_STR];
-    char info[BC_T_LONG_STR];
+    ShortString name;
+    LongString info;
     bc_Function constructor;
     bc_Function destructor;
     bc_FunctionArray methods;
