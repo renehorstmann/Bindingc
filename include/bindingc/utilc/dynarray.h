@@ -16,8 +16,8 @@
 #define DynArray(type, name) \
 typedef struct { \
     type *array; \
-    int capacity; \
-    int size; \
+    size_t capacity; \
+    size_t size; \
 } name; \
 static void name ## _kill(name *self) { \
     free(self->array); \
@@ -25,7 +25,7 @@ static void name ## _kill(name *self) { \
     self->capacity = 0; \
     self->size = 0; \
 } \
-static void name ## _set_capacity(name *self, int capacity) { \
+static void name ## _set_capacity(name *self, size_t capacity) { \
     type *new_array = (type *) realloc(self->array, capacity * sizeof(type)); \
     if (new_array) { \
         self->array = new_array; \
@@ -34,7 +34,7 @@ static void name ## _set_capacity(name *self, int capacity) { \
             self->size = capacity; \
     } \
 } \
-static void name ## _resize(name *self, int size) { \
+static void name ## _resize(name *self, size_t size) { \
     if (size > self->capacity) { \
         name ## _set_capacity(self, size * 2); \
         if(size>self->capacity) \
@@ -73,8 +73,8 @@ static type name ## _pop(name *self) { \
 #define DynArrayWithoutCopy(type, name) \
 typedef struct { \
     type *array; \
-    int capacity; \
-    int size; \
+    size_t capacity; \
+    size_t size; \
 } name; \
 static void name ## _kill(name *self) { \
     free(self->array); \
@@ -82,7 +82,7 @@ static void name ## _kill(name *self) { \
     self->capacity = 0; \
     self->size = 0; \
 } \
-static void name ## _set_capacity(name *self, int capacity) { \
+static void name ## _set_capacity(name *self, size_t capacity) { \
     type *new_array = (type *) realloc(self->array, capacity * sizeof(type)); \
     if (new_array) { \
         self->array = new_array; \
@@ -91,7 +91,7 @@ static void name ## _set_capacity(name *self, int capacity) { \
             self->size = capacity; \
     } \
 } \
-static void name ## _resize(name *self, int size) { \
+static void name ## _resize(name *self, size_t size) { \
     if (size > self->capacity) { \
         name ## _set_capacity(self, size * 2); \
         if(size>self->capacity) \
