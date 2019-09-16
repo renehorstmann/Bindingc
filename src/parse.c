@@ -6,7 +6,7 @@
 
 bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
     // string view such as "name=\"Peter\": the name of some guy."
-    bc_ParsedParameterInfo res = {0};
+    bc_ParsedParameterInfo res = {""};
 
     viu = sv_strip(viu, ' ');
     StrViu name = {viu.begin};
@@ -22,7 +22,8 @@ bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
     if (*info.begin == '=') {
         StrViu behind_def = sv_eat_until_multiple(info, ": ");
         StrViu def = sv_strip((StrViu) {info.begin + 1, behind_def.begin}, ' ');
-        res.default_value = sv_heap_cpy(def);
+        assert(sv_length(def)<sizeof(res.default_value));
+        sv_cpy(res.default_value, def);
         info = behind_def;
     }
 
@@ -32,9 +33,11 @@ bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
 
     info = sv_lstrip(info, ' ');
 
-    res.name = sv_heap_cpy(name);
-    if (!sv_empty(info))
-        res.info = sv_heap_cpy(info);
+    assert(sv_length(name)<sizeof(res.name));
+    sv_cpy(res.name, name);
+
+    assert(sv_length(info)<sizeof(res.info));
+    sv_cpy(res.info, info);
     return res;
 }
 
@@ -65,7 +68,7 @@ static char *get_info_text_on_heap_(StrViu viu) {
 }
 
 bc_ParsedInfo bc_parse_info_text(StrViu viu) {
-    bc_ParsedInfo res = {0};
+    bc_ParsedInfo res = {""};
 
     // remove leading and heading white spaces
     viu = sv_strip(viu, ' ');
@@ -108,7 +111,10 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
         viu.begin = item.end;
 
         if (*item.begin != '@') {
-            res.text = get_info_text_on_heap_(item);
+            char *info = get_info_text_on_heap_(item);
+            assert(strlen(info) < sizeof(res.text));
+            strcpy(res.text, info);
+            free(info);
             continue;
         }
         item.begin++;
@@ -130,13 +136,19 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
                 start = sv_find_first(item, ' ');
             item.begin += start + 1;
             item = sv_strip(item, ' ');
-            res.return_info = get_info_text_on_heap_(item);
+            char *info = get_info_text_on_heap_(item);
+            assert(strlen(info) < sizeof(res.return_info));
+            strcpy(res.return_info, info);
+            free(info);
             continue;
         }
         if (strncmp(item.begin, "error", 5) == 0) {
             item.begin += 5;
             item = sv_strip(item, ' ');
-            res.error_info = get_info_text_on_heap_(item);
+            char *info = get_info_text_on_heap_(item);
+            assert(strlen(info) < sizeof(res.error_info));
+            strcpy(res.error_info, info);
+            free(info);
             continue;
         }
     }
@@ -187,7 +199,7 @@ char *bc_parse_type(StrViu viu) {
 
 bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     // string view such as "const char *name" or "string IN s", ...
-    bc_ParsedParameter res = {0};
+    bc_ParsedParameter res = {""};
 
     viu = sv_strip(viu, ' ');
 
@@ -207,14 +219,19 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     type = sv_rstrip(type, ' ');
     assert(!sv_empty(type));
 
-    res.name = sv_heap_cpy(name);
-    res.type = bc_parse_type(type);
+    assert(sv_length(name) < sizeof(res.name));
+    sv_cpy(res.name, name);
+
+    char *type_string = bc_parse_type(type);
+    assert(strlen(type_string) < sizeof(res.type));
+    strcpy(res.type, type_string);
+    free(type_string);
 
     return res;
 }
 
 bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
-    bc_ParsedFunction res = {0};
+    bc_ParsedFunction res = {""};
 
     res.info = bc_parse_info_text(info);
 
@@ -241,8 +258,14 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
 
     StrViuArray params = sv_split(function, ',');
 
-    res.name = sv_heap_cpy(name);
-    res.return_type = bc_parse_type(type);
+    assert(sv_length(name) < sizeof(res.name));
+    sv_cpy(res.name, name);
+
+
+    char *type_string = bc_parse_type(type);
+    assert(strlen(type_string) < sizeof(res.return_type));
+    strcpy(res.return_type, type_string);
+    free(type_string);
 
     res.parameters_len = params.size;
     if(res.parameters_len>0)
@@ -251,28 +274,4 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 
     return res;
-}
-
-
-static StrViu parse_comment_(char *start, char *max_end) {
-    StrViu viu = {start, max_end};
-    if(start[1] == '*') {
-        // block comment
-        int end_index = sv_find_first_cstring(viu, "*/");
-        return (StrViu) {start, start+end_index+2};
-    } else {
-        int end_index = 0;
-        for(;;) {
-            int index = sv_find_first(viu, '\n');
-            if(index < 0)
-                return (StrViu) {start, max_end};
-            end_index += index;
-            viu.begin += index;
-            viu = sv_lstrip(viu, ' ');
-            if(sv_length(viu)<2)
-                return (StrViu) {start, max_end};
-            if (strncmp(viu.begin, "//", 2) != 0)
-                return (StrViu) {start, start + end_index};
-        }
-    }
 }

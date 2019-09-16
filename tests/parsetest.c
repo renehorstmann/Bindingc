@@ -43,7 +43,7 @@ int main() {
 
         viu = ToStrViu("");
         res = bc_parse_parameter_info_text(viu);
-        if (res.name != NULL || res.default_value != NULL || res.info != NULL)
+        if (*res.name != 0 || *res.default_value != 0 || *res.info != 0)
             return error("bc_parse_parameter_info_text 0 failed");
 
         viu = ToStrViu("valves=16: The amount of engine valves per cylinder. ");
@@ -56,14 +56,14 @@ int main() {
         viu = ToStrViu("turbo_available\tSpecifies if a turbo charge is mounted to the engine");
         res = bc_parse_parameter_info_text(viu);
         if (str_not_equal(res.name, "turbo_available")
-            || str_not_equal(res.default_value, NULL)
+            || str_not_equal(res.default_value, "")
             || str_not_equal(res.info, "Specifies if a turbo charge is mounted to the engine"))
             return error("bc_parse_parameter_info_text 2 failed");
 
         viu = ToStrViu("out_km: driven kilometers.\n");
         res = bc_parse_parameter_info_text(viu);
         if (str_not_equal(res.name, "out_km")
-            || str_not_equal(res.default_value, NULL)
+            || str_not_equal(res.default_value, "")
             || str_not_equal(res.info, "driven kilometers."))
             return error("bc_parse_parameter_info_text 3 failed");
 
@@ -81,22 +81,22 @@ int main() {
 
         viu = ToStrViu("");
         res = bc_parse_info_text(viu);
-        if (res.text != NULL || res.return_info != NULL || res.error_info != NULL || res.parameter_infos)
+        if (*res.text != 0 || *res.return_info != 0 || *res.error_info != 0 || res.parameter_infos_len>0)
             return error("bc_parse_parameter_info_text 0 failed");
 
         viu = ToStrViu("/** single line comment before the function */");
         res = bc_parse_info_text(viu);
         if (str_not_equal(res.text, "single line comment before the function")
-            || str_not_equal(res.return_info, NULL)
-            || str_not_equal(res.error_info, NULL)
+            || str_not_equal(res.return_info, "")
+            || str_not_equal(res.error_info, "")
             || res.parameter_infos_len != 0)
             return error("bc_parse_info_text 1 failed");
 
         viu = ToStrViu("//\tanother single line comment.\t\n");
         res = bc_parse_info_text(viu);
         if (str_not_equal(res.text, "another single line comment.")
-            || str_not_equal(res.return_info, NULL)
-            || str_not_equal(res.error_info, NULL)
+            || str_not_equal(res.return_info, "")
+            || str_not_equal(res.error_info, "")
             || res.parameter_infos_len != 0)
             return error("bc_parse_info_text 2 failed");
 
@@ -120,12 +120,12 @@ int main() {
         if (res.parameter_infos_len != 4)
             return error("bc_parse_info_text 3.2 failed");
         if (str_not_equal(res.parameter_infos[0].name, "val")
-            || str_not_equal(res.parameter_infos[0].default_value, NULL)
+            || str_not_equal(res.parameter_infos[0].default_value, "")
             || str_not_equal(res.parameter_infos[0].info, "range[0-10)"))
             return error("bc_parse_info_text 3.3 failed");
         if (str_not_equal(res.parameter_infos[1].name, "center")
             || str_not_equal(res.parameter_infos[1].default_value, "true")
-            || str_not_equal(res.parameter_infos[1].info, NULL))
+            || str_not_equal(res.parameter_infos[1].info, ""))
             return error("bc_parse_info_text 3.4 failed");
         if (str_not_equal(res.parameter_infos[2].name, "a")
             || str_not_equal(res.parameter_infos[2].default_value, "10.2")
@@ -144,7 +144,7 @@ int main() {
 
         viu = ToStrViu("");
         res = bc_parse_parameter(viu);
-        if (res.name != NULL || res.type != NULL)
+        if (*res.name != 0 || *res.type != 0)
             return error("bc_parse_parameter 0 failed");
 
         viu = ToStrViu("int a");
@@ -185,7 +185,7 @@ int main() {
 
         viu = ToStrViu("");
         res = bc_parse_function(info, viu);
-        if (res.name != NULL || res.return_type != NULL || res.parameters != NULL)
+        if (*res.name != 0 || *res.return_type != 0 || res.parameters_len != 0)
             return error("bc_parse_function 0 failed");
 
         viu = ToStrViu("void foo()");

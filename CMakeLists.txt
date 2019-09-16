@@ -12,6 +12,7 @@ add_library(bindingc
         src/parse.c
         src/parsefile.c
         src/filter.c
+        src/types.c
         )
 target_include_directories(bindingc PUBLIC include)
 
