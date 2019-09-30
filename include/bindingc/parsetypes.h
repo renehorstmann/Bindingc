@@ -1,33 +1,33 @@
 #ifndef BINDINGC_PARSETYPES_H
 #define BINDINGC_PARSETYPES_H
 
-typedef char ShortString[128];
-typedef char String[256];
-typedef char LongString[512];
+typedef char shortstring[128];
+typedef char string[256];
+typedef char longstring[512];
 
 typedef struct {
-    ShortString name;
-    ShortString type;
-} bc_ParsedParameter;
+    shortstring name;
+    shortstring type;
+} bc_parsedparameter;
 
 typedef struct {
-    ShortString name;
-    ShortString default_value;
-    String info;
-} bc_ParsedParameterInfo;
+    shortstring name;
+    shortstring default_value;
+    string info;
+} bc_parsedparameterinfo;
 
 typedef struct {
-    LongString text;
-    String return_info;
-    String error_info;
-    bc_ParsedParameterInfo *parameter_infos;
+    longstring text;
+    string return_info;
+    string error_info;
+    bc_parsedparameterinfo *parameter_infos;
     size_t parameter_infos_len;
 } bc_ParsedInfo;
 
 typedef struct {
-    ShortString name;
-    ShortString return_type;
-    bc_ParsedParameter *parameters;
+    shortstring name;
+    shortstring return_type;
+    bc_parsedparameter *parameters;
     size_t parameters_len;
     bc_ParsedInfo info;
 } bc_ParsedFunction;
@@ -38,8 +38,8 @@ typedef struct {
 } bc_ParsedFunctionArray;
 
 //typedef struct {
-//    ShortString name;
-//    ShortString type;   // char (*)() for function ptr?, char [10] for arrays
+//    shortstring name;
+//    shortstring type;   // char (*)() for function ptr?, char [10] for arrays
 //} bc_ParsedTypeDeclaration;
 //
 //typedef struct {
@@ -48,8 +48,8 @@ typedef struct {
 //} bc_ParsedTypeDeclarationArray;
 //
 //typedef struct {
-//    ShortString name;
-//    LongString info;
+//    shortstring name;
+//    longstring info;
 //    bc_ParsedTypeDeclarationArray members;
 //} bc_ParsedStruct;
 

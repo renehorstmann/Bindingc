@@ -13,15 +13,15 @@ DynArray(int, IntArray)
 static bc_FunctionArray apply_indices_function_array(bc_FunctionArray array, IntArray indices) {
     bc_FunctionArray res = {0};
     if (indices.size > 0) {
-        res.array = New0(bc_Function, (res.size = indices.size));
+        res.array = New0(bc_function, (res.size = indices.size));
         for (size_t i = 0; i < indices.size; i++)
             res.array[i] = array.array[indices.array[i]];
     }
     return res;
 }
 
-static bc_ParameterArray apply_indices_parameter_array(const bc_ParameterArray *array, IntArray indices) {
-    bc_ParameterArray res = {0};
+static bc_parameterarray apply_indices_parameter_array(const bc_parameterarray *array, IntArray indices) {
+    bc_parameterarray res = {0};
     if (indices.size > 0) {
         res.size = indices.size;
         for (size_t i = 0; i < indices.size; i++)
@@ -64,7 +64,7 @@ bc_FunctionArray bc_filter_function_name_prefix(bc_FunctionArray array, const ch
     return res;
 }
 
-bc_ParameterArray bc_filter_parameter_name_prefix(bc_ParameterArray array, const char *name_prefix) {
+bc_parameterarray bc_filter_parameter_name_prefix(bc_parameterarray array, const char *name_prefix) {
     IntArray indices = {0};
     IntArray_set_capacity(&indices, array.size);
 
@@ -73,13 +73,13 @@ bc_ParameterArray bc_filter_parameter_name_prefix(bc_ParameterArray array, const
             IntArray_push(&indices, i);
     }
 
-    bc_ParameterArray res = apply_indices_parameter_array(&array, indices);
+    bc_parameterarray res = apply_indices_parameter_array(&array, indices);
     IntArray_kill(&indices);
     return res;
 }
 
-bc_ParameterArray bc_filter_parameter_diff(bc_ParameterArray a, bc_ParameterArray b) {
-    bc_ParameterArray res = {0};
+bc_parameterarray bc_filter_parameter_diff(bc_parameterarray a, bc_parameterarray b) {
+    bc_parameterarray res = {0};
     if (a.size > 0) {
         for (size_t a_i = 0; a_i < a.size; a_i++) {
             bool found = false;

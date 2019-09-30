@@ -13,9 +13,9 @@ int error(const char *text) {
 int main() {
 
     bc_TypeArray types = bc_py3_get_default_types();
-    bc_Function function;
+    bc_function function;
 
-    function = (bc_Function){
+    function = (bc_function){
             "ce_load",
             "load",
             "loads the module",

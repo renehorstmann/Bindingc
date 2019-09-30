@@ -4,8 +4,8 @@
 
 #include "bindingc/sort.h"
 
-bc_ParameterArray bc_get_parameters(const bc_ParsedFunction *function) {
-    bc_ParameterArray res = {0};
+bc_parameterarray bc_get_parameters(const bc_ParsedFunction *function) {
+    bc_parameterarray res = {0};
     if(function->parameters_len>0) {
         res.size = function->parameters_len;
         for(size_t p=0; p < res.size; p++) {
@@ -22,8 +22,8 @@ bc_ParameterArray bc_get_parameters(const bc_ParsedFunction *function) {
     return res;
 }
 
-bc_Function bc_get_function_without_paramaters(const bc_ParsedFunction *function) {
-    bc_Function res = {0};
+bc_function bc_get_function_without_paramaters(const bc_ParsedFunction *function) {
+    bc_function res = {0};
     strcpy(res.c_name, function->name);
     strcpy(res.out_name, function->name);
     strcpy(res.info, function->info.text);
@@ -37,7 +37,7 @@ bc_Function bc_get_function_without_paramaters(const bc_ParsedFunction *function
 bc_FunctionArray bc_get_function_array_without_paramaters(const bc_ParsedFunctionArray *array) {
     bc_FunctionArray res = {0};
     if(array->size>0) {
-        res.array = New0(bc_Function, (res.size = array->size));
+        res.array = New0(bc_function, (res.size = array->size));
         for(size_t i=0; i<array->size; i++)
             res.array[i] = bc_get_function_without_paramaters(&array->array[i]);
     }

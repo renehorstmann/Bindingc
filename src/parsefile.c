@@ -167,7 +167,8 @@ bc_ParsedFunctionArray bc_parse_file(strviu filetext) {
 
 
     strviuarray functions = get_functions(viu);
-    strviuarray comments = {New(strviu, functions.size), functions.size};
+    strviuarray comments = {0};
+    comments.size = functions.size;
     res.size = functions.size;
     if(res.size > 0)
         res.array = New0(bc_ParsedFunction, functions.size);

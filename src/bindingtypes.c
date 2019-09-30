@@ -9,8 +9,8 @@ void bc_TypeArray_kill(bc_TypeArray *self) {
     self->size = 0;
 }
 
-bc_Type *bc_TypeArray_try_get(bc_TypeArray self, const char *name){
-    bc_Type *res = NULL;
+bc_type *bc_TypeArray_try_get(bc_TypeArray self, const char *name){
+    bc_type *res = NULL;
     for(size_t i=0; i<self.size; i++) {
         if(strcmp(self.array[i].c_name, name) == 0)
             return self.array+i;
@@ -18,8 +18,8 @@ bc_Type *bc_TypeArray_try_get(bc_TypeArray self, const char *name){
     return res;
 }
 
-bc_Type *bc_TypeArray_get(bc_TypeArray self, const char *name) {
-    bc_Type *res = bc_TypeArray_try_get(self, name);
+bc_type *bc_TypeArray_get(bc_TypeArray self, const char *name) {
+    bc_type *res = bc_TypeArray_try_get(self, name);
     assert(res);
     return res;
 }

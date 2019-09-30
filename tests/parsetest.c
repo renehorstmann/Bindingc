@@ -39,7 +39,7 @@ int main() {
 
     // parameter info
     {
-        bc_ParsedParameterInfo res;
+        bc_parsedparameterinfo res;
 
         viu = ToStrViu("");
         res = bc_parse_parameter_info_text(viu);
@@ -140,7 +140,7 @@ int main() {
 
     // parameter
     {
-        bc_ParsedParameter res;
+        bc_parsedparameter res;
 
         viu = ToStrViu("");
         res = bc_parse_parameter(viu);
@@ -228,9 +228,9 @@ int main() {
 //        if (*res.name != 0 || *res.type != 0)
 //            return error("bc_parse_type_declaration 0 failed");
 //
-//        viu = ToStrViu("char *String");
+//        viu = ToStrViu("char *string");
 //        res = bc_parse_type_declaration(viu);
-//        if (str_not_equal(res.name, "String")
+//        if (str_not_equal(res.name, "string")
 //            || str_not_equal(res.type, "char *"))
 //            return error("bc_parse_type_declaration 1 failed");
 //

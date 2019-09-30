@@ -4,9 +4,9 @@
 
 #include "bindingc/parse.h"
 
-bc_ParsedParameterInfo bc_parse_parameter_info_text(strviu viu) {
+bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu) {
     // string view such as "c_name=\"Peter\": the c_name of some guy."
-    bc_ParsedParameterInfo res = {0};
+    bc_parsedparameterinfo res = {0};
 
     viu = sv_strip(viu, ' ');
     strviu name = {viu.begin};
@@ -122,7 +122,7 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
             item.begin += 5;
             item = sv_strip(item, ' ');
 
-            res.parameter_infos = ReNew(bc_ParsedParameterInfo, res.parameter_infos, ++res.parameter_infos_len);
+            res.parameter_infos = ReNew(bc_parsedparameterinfo, res.parameter_infos, ++res.parameter_infos_len);
 
             char *item_text = get_info_text_on_heap_(item);
             res.parameter_infos[res.parameter_infos_len-1] = bc_parse_parameter_info_text(ToStrViu(item_text));
@@ -200,9 +200,9 @@ char *bc_parse_type(strviu viu) {
     return res;
 }
 
-bc_ParsedParameter bc_parse_parameter(strviu viu) {
+bc_parsedparameter bc_parse_parameter(strviu viu) {
     // string view such as "const char *c_name" or "string IN s", ...
-    bc_ParsedParameter res = {0};
+    bc_parsedparameter res = {0};
 
     viu = sv_strip(viu, ' ');
 
@@ -272,7 +272,7 @@ bc_ParsedFunction bc_parse_function(strviu info, strviu definition) {
 
     res.parameters_len = params.size;
     if(res.parameters_len>0)
-        res.parameters = (bc_ParsedParameter *) New(bc_ParsedParameter, res.parameters_len);
+        res.parameters = (bc_parsedparameter *) New(bc_parsedparameter, res.parameters_len);
     for (size_t i = 0; i < res.parameters_len; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 
@@ -287,7 +287,7 @@ bc_ParsedFunction bc_parse_function(strviu info, strviu definition) {
 //    if(sv_empty(viu))
 //        return res;
 //
-//    ShortString add_type = "";
+//    shortstring add_type = "";
 //    if(*(viu.end-1) == ']') {
 //        // array
 //        int end_pos = sv_length(viu);

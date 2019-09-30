@@ -6,13 +6,13 @@
 #include "parsetypes.h"
 
 
-bc_ParsedParameterInfo bc_parse_parameter_info_text(strviu viu);
+bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu);
 
 bc_ParsedInfo bc_parse_info_text(strviu viu);
 
 char *bc_parse_type(strviu viu);
 
-bc_ParsedParameter bc_parse_parameter(strviu viu);
+bc_parsedparameter bc_parse_parameter(strviu viu);
 
 bc_ParsedFunction bc_parse_function(strviu info, strviu definition);
 
