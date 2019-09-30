@@ -7,17 +7,24 @@
 #include <stdbool.h>
 
 /** Macro to create a StrViu from a cstring */
-#define ToStrViu(string) ((StrViu){(char*)(string), (char*)(string)+strlen((string))})
+#define ToStrViu(string) ((strviu){(char*)(string), (char*)(string)+strlen((string))})
 
 /** Data type for a string view instead of null termination, it uses an pointer to end (e. g. pointing to the 0) */
 typedef struct {
     char *begin;
     char *end;
-} StrViu;
+} strviu;
+
+#define STRVIUARRAY_SIZE 128
+/** Data type to store multiple StrViu's, limited to STRVIUARRAY_SIZE */
+typedef struct {
+    strviu array[128];
+    size_t size;
+} strviuarray;
 
 /** Data type to store multiple StrViu's */
 typedef struct {
-    StrViu *array;
+    strviu *array;
     size_t size;
 } StrViuArray;
 
@@ -29,17 +36,17 @@ static void StrViuArray_kill(StrViuArray *self) {
 }
 
 /** @returns: true if the StrViu is empty (length==0) */
-static bool sv_empty(StrViu viu) {
+static bool sv_empty(strviu viu) {
     return viu.begin >= viu.end;
 }
 
 /** @returns: the length of the StrViu */
-static size_t sv_length(StrViu viu) {
+static size_t sv_length(strviu viu) {
     return (viu.end > viu.begin) ? (viu.end - viu.begin) : 0;
 }
 
 /** @returns: A new StrViu, based on viu, but without the leading chars of strip (space -> isspace()) */
-static StrViu sv_lstrip(StrViu viu, char strip) {
+static strviu sv_lstrip(strviu viu, char strip) {
     if (strip == ' ') {
         while (viu.begin < viu.end && isspace(*viu.begin))
             viu.begin++;
@@ -51,7 +58,7 @@ static StrViu sv_lstrip(StrViu viu, char strip) {
 }
 
 /** @returns: A new StrViu, based on viu, but without the least chars of strip (space -> isspace()) */
-static StrViu sv_rstrip(StrViu viu, char strip) {
+static strviu sv_rstrip(strviu viu, char strip) {
     if (strip == ' ') {
         while (viu.begin < viu.end && isspace(*(viu.end - 1)))
             viu.end--;
@@ -63,13 +70,13 @@ static StrViu sv_rstrip(StrViu viu, char strip) {
 }
 
 /** @returns: A new StrViu, based on viu, but without the leading and least chars of strip (space -> isspace()) */
-static StrViu sv_strip(StrViu viu, char strip) {
+static strviu sv_strip(strviu viu, char strip) {
     return sv_lstrip(sv_rstrip(viu, strip), strip);
 }
 
-/** @returns: A new StrViu, based on viu, from the beginning until the first split, or the end */
-static StrViu sv_next_split(StrViu viu, char split) {
-    StrViu res = {viu.begin, viu.begin + 1};
+/** @returns: A new StrViu, based on viu, from the beginning until the first split, or the end*/
+static strviu sv_next_split(strviu viu, char split) {
+    strviu res = {viu.begin, viu.begin + 1};
     if (split == ' ') {
         while (res.end < viu.end && !isspace(*res.end))
             res.end++;
@@ -80,22 +87,40 @@ static StrViu sv_next_split(StrViu viu, char split) {
     return res;
 }
 
+/** @returns: An StrViuArray, based on viu, containing all non empty splits between each split (limited autotype version) */
+static strviuarray sv_split(strviu viu, char split) {
+    strviuarray res = {0};
+    for (;;) {
+        viu = sv_lstrip(viu, split);
+        if (sv_empty(viu))
+            return res;
+        strviu item = sv_next_split(viu, split);
+        viu.begin = item.end;
+        res.size++;
+        if(res.size > STRVIUARRAY_SIZE) {
+            res.size = -1;
+            return res;
+        }
+        res.array[res.size - 1] = item;
+    }
+}
+
 /** @returns: An StrViuArray, based on viu, containing all non empty splits between each split */
-static StrViuArray sv_split(StrViu viu, char split) {
+static StrViuArray sv_split_heap(strviu viu, char split) {
     StrViuArray res = {0};
     for (;;) {
         viu = sv_lstrip(viu, split);
         if (sv_empty(viu))
             return res;
-        StrViu item = sv_next_split(viu, split);
+        strviu item = sv_next_split(viu, split);
         viu.begin = item.end;
-        res.array = (StrViu *) realloc(res.array, ++res.size * sizeof(StrViu));
+        res.array = (strviu *) realloc(res.array, ++res.size * sizeof(strviu));
         res.array[res.size - 1] = item;
     }
 }
 
 /** @returns: The index of the first found char find in viu, or -1 if nothing found */
-static int sv_find_first(StrViu viu, char find) {
+static int sv_find_first(strviu viu, char find) {
     int n = 0;
     if (find == ' ') {
         while (viu.begin < viu.end) {
@@ -114,7 +139,7 @@ static int sv_find_first(StrViu viu, char find) {
 }
 
 /** @returns: The index of the last found char find in viu, or -1 if nothing found */
-static int sv_find_last(StrViu viu, char find) {
+static int sv_find_last(strviu viu, char find) {
     int n = (int) sv_length(viu) - 1;
     if (find == ' ') {
         while (--viu.end >= viu.begin) {
@@ -133,7 +158,7 @@ static int sv_find_last(StrViu viu, char find) {
 }
 
 /** @returns: The index of the first found StrViu find in viu, or -1 if nothing found */
-static int sv_find_first_sv(StrViu viu, StrViu find) {
+static int sv_find_first_sv(strviu viu, strviu find) {
     int n = 0;
     size_t find_len = sv_length(find);
     while (viu.begin <= viu.end - find_len) {
@@ -145,7 +170,7 @@ static int sv_find_first_sv(StrViu viu, StrViu find) {
 }
 
 /** @returns: The index of the last found StrViu find in viu, or -1 if nothing found */
-static int sv_find_last_sv(StrViu viu, StrViu find) {
+static int sv_find_last_sv(strviu viu, strviu find) {
     size_t find_len = sv_length(find);
     viu.end-=find_len;
     int n = (int) sv_length(viu);
@@ -158,17 +183,17 @@ static int sv_find_last_sv(StrViu viu, StrViu find) {
 }
 
 /** @returns: The index of the first found cstring find in viu, or -1 if nothing found */
-static int sv_find_first_cstring(StrViu viu, const char *find) {
+static int sv_find_first_cstring(strviu viu, const char *find) {
     return sv_find_first_sv(viu, ToStrViu(find));
 }
 
 /** @returns: The index of the last found cstring find in viu, or -1 if nothing found */
-static int sv_find_last_cstring(StrViu viu, const char *find) {
+static int sv_find_last_cstring(strviu viu, const char *find) {
     return sv_find_last_sv(viu, ToStrViu(find));
 }
 
 /** @returns: The index of the first found char of multiple_chars in viu, or -1 if nothing found */
-static int sv_find_first_multiple(StrViu viu, const char *multiple_chars) {
+static int sv_find_first_multiple(strviu viu, const char *multiple_chars) {
     int n = 0;
     while (viu.begin < viu.end) {
         for (const char *c = multiple_chars; *c != 0; c++) {
@@ -182,7 +207,7 @@ static int sv_find_first_multiple(StrViu viu, const char *multiple_chars) {
 }
 
 /** @returns: The index of the last found char of multiple_chars in viu, or -1 if nothing found */
-static int sv_find_last_multiple(StrViu viu, const char *multiple_chars) {
+static int sv_find_last_multiple(strviu viu, const char *multiple_chars) {
     int n = (int) sv_length(viu)-1;
     while (--viu.end >= viu.begin) {
         for (const char *c = multiple_chars; *c != 0; c++) {
@@ -195,7 +220,7 @@ static int sv_find_last_multiple(StrViu viu, const char *multiple_chars) {
 }
 
 /** @returns: A new StrViu, based on viu, without every leading char until the char until */
-static StrViu sv_eat_until(StrViu viu, char until) {
+static strviu sv_eat_until(strviu viu, char until) {
     int pos = sv_find_first(viu, until);
     if (pos >= 0)
         viu.begin += pos;
@@ -205,7 +230,7 @@ static StrViu sv_eat_until(StrViu viu, char until) {
 }
 
 /** @returns: A new StrViu, based on viu, without every tailing char until the char until */
-static StrViu sv_eat_back_until(StrViu viu, char until) {
+static strviu sv_eat_back_until(strviu viu, char until) {
     int pos = sv_find_last(viu, until);
     if (pos >= 0)
         viu.end = viu.begin+pos+1;
@@ -215,7 +240,7 @@ static StrViu sv_eat_back_until(StrViu viu, char until) {
 }
 
 /** @returns: A new StrViu, based on viu, without every leading char until the StrViu until */
-static StrViu sv_eat_until_sv(StrViu viu, StrViu until) {
+static strviu sv_eat_until_sv(strviu viu, strviu until) {
     int pos = sv_find_first_sv(viu, until);
     if (pos >= 0)
         viu.begin += pos;
@@ -225,7 +250,7 @@ static StrViu sv_eat_until_sv(StrViu viu, StrViu until) {
 }
 
 /** @returns: A new StrViu, based on viu, without every tailing char until the StrViu until */
-static StrViu sv_eat_back_until_sv(StrViu viu, StrViu until) {
+static strviu sv_eat_back_until_sv(strviu viu, strviu until) {
     int pos = sv_find_last_sv(viu, until);
     if (pos >= 0)
         viu.end = viu.begin+pos+sv_length(until);
@@ -235,17 +260,17 @@ static StrViu sv_eat_back_until_sv(StrViu viu, StrViu until) {
 }
 
 /** @returns: A new StrViu, based on viu, without every leading char until the cstring until */
-static StrViu sv_eat_until_cstring(StrViu viu, const char *until) {
+static strviu sv_eat_until_cstring(strviu viu, const char *until) {
     return sv_eat_until_sv(viu, ToStrViu(until));
 }
 
 /** @returns: A new StrViu, based on viu, without every tailing char until the cstring until */
-static StrViu sv_eat_back_until_cstring(StrViu viu, const char *until) {
+static strviu sv_eat_back_until_cstring(strviu viu, const char *until) {
     return sv_eat_back_until_sv(viu, ToStrViu(until));
 }
 
 /** @returns: A new StrViu, based on viu, without every leading char until one of the chars in multiple_chars */
-static StrViu sv_eat_until_multiple(StrViu viu, const char *multiple_chars) {
+static strviu sv_eat_until_multiple(strviu viu, const char *multiple_chars) {
     int pos = sv_find_first_multiple(viu, multiple_chars);
     if (pos >= 0)
         viu.begin += pos;
@@ -255,7 +280,7 @@ static StrViu sv_eat_until_multiple(StrViu viu, const char *multiple_chars) {
 }
 
 /** @returns: A new StrViu, based on viu, without every tailing char until one of the chars in multiple_chars */
-static StrViu sv_eat_back_until_multiple(StrViu viu, const char *multiple_chars) {
+static strviu sv_eat_back_until_multiple(strviu viu, const char *multiple_chars) {
     int pos = sv_find_last_multiple(viu, multiple_chars);
     if (pos >= 0)
         viu.end = viu.begin+pos+1;
@@ -265,7 +290,7 @@ static StrViu sv_eat_back_until_multiple(StrViu viu, const char *multiple_chars)
 }
 
 /** @returns: The number of the char search, found in viu */
-static int sv_count(StrViu viu, char search) {
+static int sv_count(strviu viu, char search) {
     int cnt = 0;
     if(search == ' ') {
         while (viu.begin < viu.end) {
@@ -282,7 +307,7 @@ static int sv_count(StrViu viu, char search) {
 }
 
 /** @returns: The number of the StrViu search, found in viu */
-static int sv_count_sv(StrViu viu, StrViu search) {
+static int sv_count_sv(strviu viu, strviu search) {
     int cnt = 0;
     size_t search_len = sv_length(search);
     while (viu.begin <= viu.end - search_len) {
@@ -293,12 +318,12 @@ static int sv_count_sv(StrViu viu, StrViu search) {
 }
 
 /** @returns: The number of the cstring search, found in viu */
-static int sv_count_cstring(StrViu viu, const char *search) {
+static int sv_count_cstring(strviu viu, const char *search) {
     return sv_count_sv(viu, ToStrViu(search));
 }
 
 /** @returns: The number of each char in multiple_chars, found in viu */
-static int sv_count_multiple(StrViu viu, const char *multiple_chars) {
+static int sv_count_multiple(strviu viu, const char *multiple_chars) {
     int cnt = 0;
     while(*multiple_chars)
         cnt += sv_count(viu, *multiple_chars++);
@@ -306,7 +331,7 @@ static int sv_count_multiple(StrViu viu, const char *multiple_chars) {
 }
 
 /** Replaces each char old with replacement in the StrViu viu */
-static void sv_replace(StrViu viu, char old, char replacement) {
+static void sv_replace(strviu viu, char old, char replacement) {
     while (viu.begin < viu.end) {
         if (*viu.begin == old)
             *viu.begin = replacement;
@@ -314,7 +339,7 @@ static void sv_replace(StrViu viu, char old, char replacement) {
 }
 
 /** Copies the StrViu viu to dst, with each StrViu old replaced to replacement (until the end of one is reached) */
-static void sv_replace_into_sv(StrViu dst, StrViu viu, StrViu old, StrViu replacement) {
+static void sv_replace_into_sv(strviu dst, strviu viu, strviu old, strviu replacement) {
     size_t old_len = sv_length(old);
     size_t repl_len = sv_length(replacement);
     while (dst.begin < dst.end && viu.begin < viu.end) {
@@ -331,7 +356,7 @@ static void sv_replace_into_sv(StrViu dst, StrViu viu, StrViu old, StrViu replac
 }
 
 /** Copies the StrViu viu to dst, with each cstring old replaced to replacement (until the end of one is reached) */
-static void sv_replace_into_cstring(StrViu dst, StrViu viu, const char *old, const char *replacement) {
+static void sv_replace_into_cstring(strviu dst, strviu viu, const char *old, const char *replacement) {
     sv_replace_into_sv(dst, viu, ToStrViu(old), ToStrViu(replacement));
 }
 
@@ -339,7 +364,7 @@ static void sv_replace_into_cstring(StrViu dst, StrViu viu, const char *old, con
  * @returns: A new cstring on the heap, copied from viu to dst,
  * with each StrViu old replaced to replacement
  */
-static char *sv_replace_to_heap_sv(StrViu viu, StrViu old, StrViu replacement) {
+static char *sv_replace_to_heap_sv(strviu viu, strviu old, strviu replacement) {
     size_t old_len = sv_length(old);
     size_t repl_len = sv_length(replacement);
     size_t size = sv_length(viu) + 1;
@@ -383,20 +408,20 @@ static char *sv_replace_to_heap_sv(StrViu viu, StrViu old, StrViu replacement) {
  * @returns: A new cstring on the heap, copied from viu to dst,
  * with each cstring old replaced to replacement
  */
-static char *sv_replace_to_heap_cstring(StrViu viu, const char *old, const char *replacement) {
+static char *sv_replace_to_heap_cstring(strviu viu, const char *old, const char *replacement) {
     return sv_replace_to_heap_sv(viu, ToStrViu(old), ToStrViu(replacement));
 }
 
 
 /** Copies the StrViu viu into the cstring dst */
-static void sv_cpy(char *dst, StrViu viu) {
+static void sv_cpy(char *dst, strviu viu) {
     size_t len = sv_length(viu);
     strncpy(dst, viu.begin, len);
     dst[len] = 0;
 }
 
 /** @return: The StrViu viu into a cstring on the heap */
-static char *sv_heap_cpy(StrViu viu) {
+static char *sv_heap_cpy(strviu viu) {
     char *str = (char *) malloc(sv_length(viu) + 1);
     sv_cpy(str, viu);
     return str;

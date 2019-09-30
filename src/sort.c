@@ -7,7 +7,7 @@
 bc_ParameterArray bc_get_parameters(const bc_ParsedFunction *function) {
     bc_ParameterArray res = {0};
     if(function->parameters_len>0) {
-        res.array = New0(bc_Parameter, function->parameters_len);
+        res.size = function->parameters_len;
         for(size_t p=0; p < res.size; p++) {
             strcpy(res.array[p].name, function->parameters[p].name);
             strcpy(res.array[p].type, function->parameters[p].type);
@@ -23,20 +23,21 @@ bc_ParameterArray bc_get_parameters(const bc_ParsedFunction *function) {
 }
 
 bc_Function bc_get_function_without_paramaters(const bc_ParsedFunction *function) {
-    bc_Function res = {""};
-    strcpy(res.name, function->name);
-    strcpy(res.return_type, function->return_type);
+    bc_Function res = {0};
+    strcpy(res.c_name, function->name);
+    strcpy(res.out_name, function->name);
     strcpy(res.info, function->info.text);
-    strcpy(res.return_info, function->info.return_info);
     strcpy(res.error_info, function->info.error_info);
+    strcpy(res.return_parameter.type, function->return_type);
+    strcpy(res.return_parameter.info, function->info.return_info);
+    strcpy(res.return_parameter.name, "return");
     return res;
 }
 
 bc_FunctionArray bc_get_function_array_without_paramaters(const bc_ParsedFunctionArray *array) {
     bc_FunctionArray res = {0};
     if(array->size>0) {
-        res.array = New0(bc_Function, array->size);
-        res.size = array->size;
+        res.array = New0(bc_Function, (res.size = array->size));
         for(size_t i=0; i<array->size; i++)
             res.array[i] = bc_get_function_without_paramaters(&array->array[i]);
     }

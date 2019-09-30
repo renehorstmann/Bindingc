@@ -6,16 +6,20 @@
 #include "parsetypes.h"
 
 
-bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu);
+bc_ParsedParameterInfo bc_parse_parameter_info_text(strviu viu);
 
-bc_ParsedInfo bc_parse_info_text(StrViu viu);
+bc_ParsedInfo bc_parse_info_text(strviu viu);
 
-char *bc_parse_type(StrViu viu);
+char *bc_parse_type(strviu viu);
 
-bc_ParsedParameter bc_parse_parameter(StrViu viu);
+bc_ParsedParameter bc_parse_parameter(strviu viu);
 
-bc_ParsedFunction bc_parse_function(StrViu info, StrViu function);
+bc_ParsedFunction bc_parse_function(strviu info, strviu definition);
 
-bc_ParsedFunctionArray bc_parse_file(StrViu filetext);
+//bc_ParsedTypeDeclaration bc_parse_type_declaration(strviu viu);
+
+//bc_ParsedStruct bc_parse_struct(strviu info, strviu definition);
+
+bc_ParsedFunctionArray bc_parse_file(strviu filetext);
 
 #endif //BINDINGC_PARSE_H

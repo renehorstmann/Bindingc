@@ -35,7 +35,7 @@ char *open_file_as_string(const char *filename) {
 
 int main() {
 
-    StrViu viu;
+    strviu viu;
 
     // parameter info
     {
@@ -81,7 +81,7 @@ int main() {
 
         viu = ToStrViu("");
         res = bc_parse_info_text(viu);
-        if (*res.text != 0 || *res.return_info != 0 || *res.error_info != 0 || res.parameter_infos_len>0)
+        if (*res.text != 0 || *res.return_info != 0 || *res.error_info != 0 || res.parameter_infos_len > 0)
             return error("bc_parse_parameter_info_text 0 failed");
 
         viu = ToStrViu("/** single line comment before the function */");
@@ -181,7 +181,7 @@ int main() {
     // function
     {
         bc_ParsedFunction res;
-        StrViu info = ToStrViu("");
+        strviu info = ToStrViu("");
 
         viu = ToStrViu("");
         res = bc_parse_function(info, viu);
@@ -218,6 +218,75 @@ int main() {
             return error("bc_parse_function 3.4 failed");
 
     }
+
+//    // type declerations
+//    {
+//        bc_ParsedTypeDeclaration res;
+//
+//        viu = ToStrViu("");
+//        res = bc_parse_type_declaration(viu);
+//        if (*res.name != 0 || *res.type != 0)
+//            return error("bc_parse_type_declaration 0 failed");
+//
+//        viu = ToStrViu("char *String");
+//        res = bc_parse_type_declaration(viu);
+//        if (str_not_equal(res.name, "String")
+//            || str_not_equal(res.type, "char *"))
+//            return error("bc_parse_type_declaration 1 failed");
+//
+//        viu = ToStrViu(" const  char \t* Error ");
+//        res = bc_parse_type_declaration(viu);
+//        if (str_not_equal(res.name, "Error")
+//            || str_not_equal(res.type, "const char *"))
+//            return error("bc_parse_type_declaration 2 failed");
+//
+//        viu = ToStrViu("float Vec3[3]");
+//        res = bc_parse_type_declaration(viu);
+//        if (str_not_equal(res.name, "Vec3")
+//            || str_not_equal(res.type, "float [3]"))
+//            return error("bc_parse_type_declaration 3 failed");
+//
+//        viu = ToStrViu("int Mat4i[4][4]");
+//        res = bc_parse_type_declaration(viu);
+//        if (str_not_equal(res.name, "Mat4i")
+//            || str_not_equal(res.type, "int [4][4]"))
+//            return error("bc_parse_type_declaration 4 failed");
+//
+//        viu = ToStrViu("void (*fun_ptr)(int a, char c)");
+//        res = bc_parse_type_declaration(viu);
+//        if (str_not_equal(res.name, "fun_ptr")
+//            || str_not_equal(res.type, "void (*)"))
+//            return error("bc_parse_type_declaration 5 failed");
+//    }
+
+//    // struct
+//    {
+//        bc_ParsedStruct res;
+//        strviu info = ToStrViu("");
+//
+//        viu = ToStrViu("");
+//        res = bc_parse_struct(info, viu);
+//        if (*res.name != 0 || res.members.size != 0)
+//            return error("bc_parse_struct 0 failed");
+//
+//        viu = ToStrViu("struct {int a;} A;");
+//        res = bc_parse_struct(info, viu);
+//        if (str_not_equal(res.name, "A")
+//            || res.members.size != 1)
+//            return error("bc_parse_struct 1.0 failed");
+//        if (str_not_equal(res.members.array[0].name, "a")
+//            || str_not_equal(res.members.array[0].type, "int"))
+//            return error("bc_parse_struct 1.1 failed");
+//
+//        viu = ToStrViu("struct {void *impl_;} B;");
+//        res = bc_parse_struct(info, viu);
+//        if (str_not_equal(res.name, "B")
+//            || res.members.size != 1)
+//            return error("bc_parse_struct 2.0 failed");
+//        if (str_not_equal(res.members.array[0].name, "impl_")
+//            || str_not_equal(res.members.array[0].type, "void *"))
+//            return error("bc_parse_struct 2.1 failed");
+//    }
 
     {
         // file

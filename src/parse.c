@@ -4,15 +4,15 @@
 
 #include "bindingc/parse.h"
 
-bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
-    // string view such as "name=\"Peter\": the name of some guy."
-    bc_ParsedParameterInfo res = {""};
+bc_ParsedParameterInfo bc_parse_parameter_info_text(strviu viu) {
+    // string view such as "c_name=\"Peter\": the c_name of some guy."
+    bc_ParsedParameterInfo res = {0};
 
     viu = sv_strip(viu, ' ');
-    StrViu name = {viu.begin};
+    strviu name = {viu.begin};
 
 
-    StrViu info = sv_eat_until_multiple(viu, "=: ");
+    strviu info = sv_eat_until_multiple(viu, "=: ");
     if (sv_empty(info))
         return res;
 
@@ -20,8 +20,8 @@ bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
     name = sv_rstrip(name, ' ');
 
     if (*info.begin == '=') {
-        StrViu behind_def = sv_eat_until_multiple(info, ": ");
-        StrViu def = sv_strip((StrViu) {info.begin + 1, behind_def.begin}, ' ');
+        strviu behind_def = sv_eat_until_multiple(info, ": ");
+        strviu def = sv_strip((strviu) {info.begin + 1, behind_def.begin}, ' ');
         assert(sv_length(def)<sizeof(res.default_value));
         sv_cpy(res.default_value, def);
         info = behind_def;
@@ -42,15 +42,15 @@ bc_ParsedParameterInfo bc_parse_parameter_info_text(StrViu viu) {
 }
 
 
-static char *get_info_text_on_heap_(StrViu viu) {
+static char *get_info_text_on_heap_(strviu viu) {
     char *text = New0(char, 1);
     size_t text_len = 0;
     while (viu.begin < viu.end) {
         viu = sv_lstrip(viu, ' ');
         viu = sv_lstrip(viu, '/');
         viu = sv_lstrip(viu, '*');
-        StrViu next_line = sv_eat_until(viu, '\n');
-        StrViu line = sv_strip((StrViu) {viu.begin, next_line.begin}, ' ');
+        strviu next_line = sv_eat_until(viu, '\n');
+        strviu line = sv_strip((strviu) {viu.begin, next_line.begin}, ' ');
         viu = next_line;
 
         if (sv_empty(line))
@@ -67,8 +67,8 @@ static char *get_info_text_on_heap_(StrViu viu) {
     return text;
 }
 
-bc_ParsedInfo bc_parse_info_text(StrViu viu) {
-    bc_ParsedInfo res = {""};
+bc_ParsedInfo bc_parse_info_text(strviu viu) {
+    bc_ParsedInfo res = {0};
 
     // remove leading and heading white spaces
     viu = sv_strip(viu, ' ');
@@ -107,7 +107,7 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
                 next = next_end;
         }
 
-        StrViu item = {viu.begin, viu.begin + next};
+        strviu item = {viu.begin, viu.begin + next};
         viu.begin = item.end;
 
         if (*item.begin != '@') {
@@ -157,25 +157,28 @@ bc_ParsedInfo bc_parse_info_text(StrViu viu) {
 }
 
 
-char *bc_parse_type(StrViu viu) {
+char *bc_parse_type(strviu viu) {
     char *res;
 
-    StrViuArray components = {0};
+    strviuarray components = {0};
     while(viu.begin < viu.end) {
         int next = sv_find_first_multiple(viu, "* ");
         if(next<0) {
             // rest of viu is last component
-            components.array = ReNew(StrViu, components.array, ++components.size);
+            components.size++;
+            assert(components.size < STRVIUARRAY_SIZE);
             components.array[components.size - 1] = viu;
             break;
         } else if(next == 0) {
             // should be a *
-            components.array = ReNew(StrViu, components.array, ++components.size);
-            components.array[components.size - 1] = (StrViu) {viu.begin, viu.begin + 1};
+            components.size++;
+            assert(components.size < STRVIUARRAY_SIZE);
+            components.array[components.size - 1] = (strviu) {viu.begin, viu.begin + 1};
             viu.begin++;
         } else {
-            components.array = ReNew(StrViu, components.array, ++components.size);
-            components.array[components.size - 1] = (StrViu) {viu.begin, viu.begin + next};
+            components.size++;
+            assert(components.size < STRVIUARRAY_SIZE);
+            components.array[components.size - 1] = (strviu) {viu.begin, viu.begin + next};
             viu.begin+=next;
         }
 
@@ -197,17 +200,17 @@ char *bc_parse_type(StrViu viu) {
     return res;
 }
 
-bc_ParsedParameter bc_parse_parameter(StrViu viu) {
-    // string view such as "const char *name" or "string IN s", ...
-    bc_ParsedParameter res = {""};
+bc_ParsedParameter bc_parse_parameter(strviu viu) {
+    // string view such as "const char *c_name" or "string IN s", ...
+    bc_ParsedParameter res = {0};
 
     viu = sv_strip(viu, ' ');
 
     if(sv_empty(viu))
         return res;
 
-    StrViu name = {viu.end, viu.end};
-    StrViu type = {viu.begin};
+    strviu name = {viu.end, viu.end};
+    strviu type = {viu.begin};
     do {
         name.begin--;
     } while (name.begin > viu.begin && !isspace(*name.begin) && *name.begin != '*');
@@ -230,33 +233,33 @@ bc_ParsedParameter bc_parse_parameter(StrViu viu) {
     return res;
 }
 
-bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
-    bc_ParsedFunction res = {""};
+bc_ParsedFunction bc_parse_function(strviu info, strviu definition) {
+    bc_ParsedFunction res = {0};
 
     res.info = bc_parse_info_text(info);
 
-    int params_start = sv_find_first(function, '(');
+    int params_start = sv_find_first(definition, '(');
     if(params_start<0)
         return res;
 
-    StrViu type_name = {function.begin, function.begin + params_start};
-    function.begin += params_start + 1;
+    strviu type_name = {definition.begin, definition.begin + params_start};
+    definition.begin += params_start + 1;
 
     type_name = sv_strip(type_name, ' ');
     int name_pos = sv_find_last_multiple(type_name, "* ");
 
-    StrViu type = {type_name.begin, type_name.begin + name_pos + 1};
+    strviu type = {type_name.begin, type_name.begin + name_pos + 1};
     type = sv_rstrip(type, ' ');
 
-    StrViu name = {type_name.begin + name_pos + 1, type_name.end};
+    strviu name = {type_name.begin + name_pos + 1, type_name.end};
 
-    function = sv_eat_back_until(function, ')');
-    if(sv_empty(function))
+    definition = sv_eat_back_until(definition, ')');
+    if(sv_empty(definition))
         return res;
 
-    function.end--;
+    definition.end--;
 
-    StrViuArray params = sv_split(function, ',');
+    strviuarray params = sv_split(definition, ',');
 
     assert(sv_length(name) < sizeof(res.name));
     sv_cpy(res.name, name);
@@ -275,3 +278,70 @@ bc_ParsedFunction bc_parse_function(StrViu info, StrViu function) {
 
     return res;
 }
+
+
+//bc_ParsedTypeDeclaration bc_parse_type_declaration(strviu viu) {
+//    bc_ParsedTypeDeclaration res = {0};
+//
+//    viu = sv_strip(viu, ' ');
+//    if(sv_empty(viu))
+//        return res;
+//
+//    ShortString add_type = "";
+//    if(*(viu.end-1) == ']') {
+//        // array
+//        int end_pos = sv_length(viu);
+//        do {
+//            viu = sv_eat_back_until(viu, '[');
+//            viu.end--;
+//            viu = sv_rstrip(viu, ' ');
+//        } while(!sv_empty(viu) && *(viu.end-1) == ']');
+//        strviu add = {viu.end, viu.end + end_pos};
+//        add_type[0] = ' ';
+//        assert(sv_length(add)+1 < sizeof(add_type));
+//        sv_cpy(add_type+1, add);
+//
+//    } else if(*(viu.end-1) == ')') {
+//        // function ptr
+//        int fun_ptr_close = sv_find_first(viu, ')');
+//        viu.end = viu.begin+fun_ptr_close;
+//        strcpy(add_type, " (*)");
+//    }
+//
+//    assert(sv_find_first(viu, ',') == -1);
+//
+//    int name_start = sv_find_last_multiple(viu, "* ") + 1;
+//    strviu name = {viu.begin+name_start, viu.end};
+//
+//    if(strcmp(add_type, " (*)") == 0) {
+//        int fun_ptr_open = sv_find_last(viu, '(');
+//        name_start = fun_ptr_open-1;
+//    }
+//    strviu type = {viu.begin, viu.begin + name_start};
+//
+//    assert(sv_length(name) < sizeof(res.name));
+//    sv_cpy(res.name, name);
+//
+//    char *type_string = bc_parse_type(type);
+//    size_t type_string_len = strlen(type_string);
+//    assert(type_string_len + strlen(add_type) < sizeof(res.type));
+//    strcpy(res.type, type_string);
+//    strcpy(res.type+type_string_len, add_type);
+//    free(type_string);
+//
+//    return res;
+//}
+
+//bc_ParsedStruct bc_parse_struct(strviu info, strviu definition) {
+//    bc_ParsedStruct res = {0};
+//
+//    bc_ParsedInfo parsed_info = bc_parse_info_text(info);
+//    strcpy(res.info, parsed_info.text);
+//    bc_ParsedInfo_kill(&parsed_info);
+//
+//
+//
+//    return res;
+//}
+
+

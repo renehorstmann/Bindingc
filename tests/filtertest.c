@@ -31,7 +31,7 @@ int main() {
     if(!file)
         return error("couldnt open file");
 
-    bc_ParsedFunctionArray parsed_functions = bc_parse_file(ToStrViu(file));
+    bc_ParsedFunctionArray parsed_functions = bc_parse_file(Tostrviu(file));
     if(parsed_functions.size != 8)
         return error("bc_parse_file failed");
 

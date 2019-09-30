@@ -4,9 +4,9 @@
 #include "bindingc/parse.h"
 
 
-static void clear_strings(StrViu viu, char clear) {
+static void clear_strings(strviu viu, char clear) {
     while (viu.begin < viu.end) {
-        StrViu comment = sv_eat_until(viu, '\"');
+        strviu comment = sv_eat_until(viu, '\"');
         viu.begin = comment.begin + 1;
         for (;;) {
             int end = sv_find_first(viu, '\"');
@@ -21,9 +21,9 @@ static void clear_strings(StrViu viu, char clear) {
     }
 }
 
-static void clear_comments(StrViu viu, char clear) {
+static void clear_comments(strviu viu, char clear) {
     // first block, then line ( /* // */ int a; )
-    StrViu back_up = viu;
+    strviu back_up = viu;
     while (viu.begin < viu.end) {
         viu = sv_eat_until_cstring(viu, "/*");
         if (sv_empty(viu))
@@ -48,19 +48,19 @@ static void clear_comments(StrViu viu, char clear) {
     }
 }
 
-static void clear_macros(StrViu viu, char clear) {
+static void clear_macros(strviu viu, char clear) {
     while (viu.begin < viu.end) {
         viu = sv_lstrip(viu, ' ');
         if (sv_empty(viu))
             return;
         if (*viu.begin == '#') {
             // clear macro code
-            StrViu macro = viu;
+            strviu macro = viu;
             for (;;) {
                 int line_end = sv_find_first(viu, '\n');
                 if (line_end < 0) // macro on last line
                     break;
-                StrViu line = {viu.begin, viu.begin + line_end};
+                strviu line = {viu.begin, viu.begin + line_end};
                 int expand = sv_find_first(line, '\\');
                 if (expand < 0) {
                     macro.end = line.end;
@@ -81,7 +81,7 @@ static void clear_macros(StrViu viu, char clear) {
     }
 }
 
-static StrViu eat_implementation_r_(StrViu viu) {
+static strviu eat_implementation_r_(strviu viu) {
     assert(*viu.begin == '{');
     viu.begin++;
     for (;;) {
@@ -100,8 +100,8 @@ static StrViu eat_implementation_r_(StrViu viu) {
 }
 
 // viu should be the cleared filetext with clear_strings, _comments, _macros
-static StrViuArray get_functions(StrViu viu) {
-    StrViuArray functions = {0};
+static strviuarray get_functions(strviu viu) {
+    strviuarray functions = {0};
 
     while (viu.begin < viu.end) {
         viu = sv_lstrip(viu, ' ');
@@ -114,7 +114,7 @@ static StrViuArray get_functions(StrViu viu) {
             viu.begin++;
             continue;
         }
-        StrViu decl = {viu.begin, viu.begin + decl_end};
+        strviu decl = {viu.begin, viu.begin + decl_end};
         bool is_function = false;
         bool is_struct;
         if (sv_count(decl, '(') == 1 && sv_count(decl, ')') == 1) {
@@ -123,7 +123,7 @@ static StrViuArray get_functions(StrViu viu) {
             // -> starts with a ptr
             // or it could be some sort of int (a);
             // -> single word (no spaces in between)
-            StrViu tmp = sv_eat_until(decl, '(');
+            strviu tmp = sv_eat_until(decl, '(');
             tmp.begin++;
             tmp = sv_eat_back_until(tmp, ')');
             tmp.end--;
@@ -134,7 +134,8 @@ static StrViuArray get_functions(StrViu viu) {
         is_struct = !is_function && viu.begin[decl_end] == '{';
 
         if (is_function) {
-            functions.array = ReNew(StrViu, functions.array, ++functions.size);
+            functions.size++;
+            assert(functions.size < STRVIUARRAY_SIZE);
             functions.array[functions.size - 1] = decl;
         }
 
@@ -154,30 +155,30 @@ static StrViuArray get_functions(StrViu viu) {
     return functions;
 }
 
-bc_ParsedFunctionArray bc_parse_file(StrViu filetext) {
+bc_ParsedFunctionArray bc_parse_file(strviu filetext) {
     bc_ParsedFunctionArray res = {0};
 
     char *copy_function = sv_heap_cpy(filetext);
-    StrViu viu = {copy_function, copy_function + sv_length(filetext)};
+    strviu viu = {copy_function, copy_function + sv_length(filetext)};
 
     clear_strings(viu, ' ');
     clear_comments(viu, ' ');
     clear_macros(viu, ' ');
 
 
-    StrViuArray functions = get_functions(viu);
-    StrViuArray comments = {New(StrViu, functions.size), functions.size};
+    strviuarray functions = get_functions(viu);
+    strviuarray comments = {New(strviu, functions.size), functions.size};
     res.size = functions.size;
     if(res.size > 0)
         res.array = New0(bc_ParsedFunction, functions.size);
 
     for (size_t i = 0; i < functions.size; i++) {
         size_t decl_start_pos = functions.array[i].begin - copy_function;
-        StrViu back = {filetext.begin, filetext.begin + decl_start_pos};
+        strviu back = {filetext.begin, filetext.begin + decl_start_pos};
         back = sv_eat_back_until(back, '\n');
         back.end--;
-        StrViu line = {back.end, back.end};
-        comments.array[i] = (StrViu) {back.end, back.end};
+        strviu line = {back.end, back.end};
+        comments.array[i] = (strviu) {back.end, back.end};
         do {
             comments.array[i].begin = back.end;
             back = sv_eat_back_until(back, '\n');
@@ -192,8 +193,6 @@ bc_ParsedFunctionArray bc_parse_file(StrViu filetext) {
         res.array[i] = bc_parse_function(comments.array[i], functions.array[i]);
 
     free(copy_function);
-    StrViuArray_kill(&functions);
-    StrViuArray_kill(&comments);
     return res;
 }
 
