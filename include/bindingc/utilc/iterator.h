@@ -1,6 +1,7 @@
 #ifndef UTILC_ITERATOR_H
 #define UTILC_ITERATOR_H
 
+#include <stdlib.h>
 
 typedef struct intiterator {
     char impl[32]; // impl max size = 32 bytes
