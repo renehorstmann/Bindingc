@@ -11,9 +11,7 @@ DynArray(char, StrArray)
 
 
 static void append(StrArray *arr, const char *str) {
-    size_t old_size = arr->size;
-    StrArray_resize(arr, old_size + strlen(str));
-    strcpy(arr->array + old_size - 1, str);
+    StrArray_push_array(arr, str, strlen(str));
 }
 
 static void append_indent(StrArray *arr, int level) {
