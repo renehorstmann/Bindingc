@@ -19,7 +19,6 @@ static void append_indent(StrArray *arr, int level) {
     StrArray_resize(arr, old_size + level);
     for (int i = 0; i < level; i++)
         arr->array[old_size + i - 1] = ' ';
-    arr->array[arr->size - 1] = '\0';
 }
 
 
@@ -194,8 +193,7 @@ char *bc_py3_generate_function(const bc_function *function, bc_TypeArray types, 
 
 char *bc_py3_generate_interface(const bc_function *function, bc_TypeArray types, int indent) {
     StrArray res = {0};
-    StrArray_resize(&res, 1);
-    res.array[0] = '\0';
+    StrArray_set_capacity(&res, 32);
 
     // parameters
     if(function->parameters.size>0) {
@@ -220,6 +218,8 @@ char *bc_py3_generate_interface(const bc_function *function, bc_TypeArray types,
         append(&res, bc_TypeArray_get(types, function->return_parameter.type)->out_name);
         append(&res, "\n");
     }
+
+    StrArray_push(&res, '\0');
 
     return res.array;
 }
