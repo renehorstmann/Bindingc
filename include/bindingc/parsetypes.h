@@ -1,39 +1,37 @@
 #ifndef BINDINGC_PARSETYPES_H
 #define BINDINGC_PARSETYPES_H
 
-typedef char shortstring[128];
-typedef char string[256];
-typedef char longstring[512];
+#include "base.h"
 
 typedef struct {
-    shortstring name;
-    shortstring type;
+    bc_shortstring name;
+    bc_shortstring type;
 } bc_parsedparameter;
 
 typedef struct {
-    shortstring name;
-    shortstring default_value;
-    string info;
+    bc_shortstring name;
+    bc_shortstring default_value;
+    bc_string info;
 } bc_parsedparameterinfo;
 
 typedef struct {
-    longstring text;
-    string return_info;
-    string error_info;
-    bc_parsedparameterinfo *parameter_infos;
+    bc_longstring text;
+    bc_string return_info;
+    bc_string error_info;
+    bc_parsedparameterinfo parameter_infos[MAX_PARAMETERS];
     size_t parameter_infos_len;
-} bc_ParsedInfo;
+} bc_parsedinfo;
 
 typedef struct {
-    shortstring name;
-    shortstring return_type;
-    bc_parsedparameter *parameters;
+    bc_shortstring name;
+    bc_shortstring return_type;
+    bc_parsedparameter parameters[MAX_PARAMETERS];
     size_t parameters_len;
-    bc_ParsedInfo info;
-} bc_ParsedFunction;
+    bc_parsedinfo info;
+} bc_parsedfunction;
 
 typedef struct {
-    bc_ParsedFunction *array;
+    bc_parsedfunction *array;
     size_t size;
 } bc_ParsedFunctionArray;
 
@@ -52,10 +50,6 @@ typedef struct {
 //    longstring info;
 //    bc_ParsedTypeDeclarationArray members;
 //} bc_ParsedStruct;
-
-void bc_ParsedInfo_kill(bc_ParsedInfo *self);
-
-void bc_ParsedFunction_kill(bc_ParsedFunction *self);
 
 void bc_ParsedFunctionArray_kill(bc_ParsedFunctionArray *self);
 

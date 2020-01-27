@@ -4,16 +4,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-typedef char shortstring[128];
-typedef char string[256];
-typedef char longstring[512];
+
+#include "base.h"
 
 
 typedef struct {
-    shortstring name;
-    shortstring type;
-    shortstring default_value;
-    string info;
+    bc_shortstring name;
+    bc_shortstring type;
+    bc_shortstring default_value;
+    bc_string info;
     bool is_input;  // todo: could also be an enum IN, OUT, INOUT, OPT, ERROR, ...
     bool is_output;
 } bc_parameter;
@@ -24,10 +23,10 @@ typedef struct {
 } bc_parameterarray;
 
 typedef struct {
-    shortstring c_name;
-    shortstring out_name;
-    longstring info;
-    string error_info;
+    bc_shortstring c_name;
+    bc_shortstring out_name;
+    bc_longstring info;
+    bc_string error_info;
     bc_parameter return_parameter;
     bc_parameterarray parameters;
 } bc_function;

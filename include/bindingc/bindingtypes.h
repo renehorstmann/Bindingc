@@ -1,17 +1,17 @@
 #ifndef BINDINGC_BINDINGTYPES_H
 #define BINDINGC_BINDINGTYPES_H
 
-typedef char shortstring[128];
-typedef char string[256];
-typedef char longstring[512];
+typedef char bc_shortstring[128];
+typedef char bc_string[256];
+typedef char bc_longstring[512];
 
 typedef struct {
-    shortstring c_name;         // char *
-    shortstring out_name;       // str
-    shortstring call_name;      // c_char_p
-    string creation;            // c_char_p()
-    string to_c_template;       // $.encode()
-    string from_c_template;     // $.decode()
+    bc_shortstring c_name;         // char *
+    bc_shortstring out_name;       // str
+    bc_shortstring call_name;      // c_char_p
+    bc_string creation;            // c_char_p()
+    bc_string to_c_template;       // $.encode()
+    bc_string from_c_template;     // $.decode()
 } bc_type;
 
 typedef struct {

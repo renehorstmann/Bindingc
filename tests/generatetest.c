@@ -1,14 +1,8 @@
-#include <stdio.h>
-
 #include "bindingc/types.h"
 #include "bindingc/py3/types.h"
 #include "bindingc/py3/generate.h"
 
-int error(const char *text) {
-    fputs(text, stderr);
-    return 1;
-}
-
+#include "test_helper.h"
 
 int main() {
 
@@ -44,6 +38,9 @@ int main() {
 
     char *init = bc_py3_generate_interface(&function, types, 0);
     char *code = bc_py3_generate_function(&function, types, 0);
+
+    if(strcmp(init, "_lib.ce_load.argtypes = [float]\n_lib.ce_load.restype = int\n") != 0)
+        return error("generate_interface failed");
 
     puts(init);
     puts("");

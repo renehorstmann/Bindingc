@@ -1,8 +1,10 @@
 #include <limits.h>
+#include <stdio.h>
 
 #include "bindingc/utilc/alloc.h"
-
 #include "bindingc/parse.h"
+
+#include "bindingc/log.h"
 
 bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu) {
     // string view such as "c_name=\"Peter\": the c_name of some guy."
@@ -22,8 +24,9 @@ bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu) {
     if (*info.begin == '=') {
         strviu behind_def = sv_eat_until_multiple(info, ": ");
         strviu def = sv_strip((strviu) {info.begin + 1, behind_def.begin}, ' ');
-        assert(sv_length(def)<sizeof(res.default_value));
-        sv_cpy(res.default_value, def);
+        if(sv_length(def) >= sizeof(res.default_value))
+            bc_log_warn("Parameter default value string is too long: %.*s", sv_length(def), def.begin);
+        sv_ncpy(res.default_value, def, sizeof(res.default_value));
         info = behind_def;
     }
 
@@ -33,11 +36,13 @@ bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu) {
 
     info = sv_lstrip(info, ' ');
 
-    assert(sv_length(name)<sizeof(res.name));
-    sv_cpy(res.name, name);
+    if(sv_length(name) >= sizeof(res.name))
+        bc_log_warn("Parameter name string is too long: %.*s", sv_length(name), name.begin);
+    sv_ncpy(res.name, name, sizeof(res.name));
 
-    assert(sv_length(info)<sizeof(res.info));
-    sv_cpy(res.info, info);
+    if(sv_length(info) >= sizeof(res.info))
+        bc_log_warn("Parameter info string is too long: %.*s", sv_length(info), info.begin);
+    sv_ncpy(res.info, info, sizeof(res.info));
     return res;
 }
 
@@ -56,7 +61,7 @@ static char *get_info_text_on_heap_(strviu viu) {
         if (sv_empty(line))
             continue;
 
-        if(text_len>0)
+        if (text_len > 0)
             text[text_len++] = ' ';   // space between each line
 
         size_t line_len = sv_length(line);
@@ -67,8 +72,8 @@ static char *get_info_text_on_heap_(strviu viu) {
     return text;
 }
 
-bc_ParsedInfo bc_parse_info_text(strviu viu) {
-    bc_ParsedInfo res = {0};
+bc_parsedinfo bc_parse_info_text(strviu viu) {
+    bc_parsedinfo res = {0};
 
     // remove leading and heading white spaces
     viu = sv_strip(viu, ' ');
@@ -89,15 +94,15 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
         {
             viu.begin++;    //ignore first @
             next = sv_find_first_cstring(viu, "@param");
-            next = next < 0 ? INT_MAX : next+1;
+            next = next < 0 ? INT_MAX : next + 1;
 
             int next_return = sv_find_first_cstring(viu, "@return");
-            next_return = next_return < 0 ? INT_MAX : next_return+1;
+            next_return = next_return < 0 ? INT_MAX : next_return + 1;
             if (next_return < next)
                 next = next_return;
 
             int next_error = sv_find_first_cstring(viu, "@error");
-            next_error = next_error < 0 ? INT_MAX : next_error+1;
+            next_error = next_error < 0 ? INT_MAX : next_error + 1;
             if (next_error < next)
                 next = next_error;
 
@@ -112,8 +117,10 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
 
         if (*item.begin != '@') {
             char *info = get_info_text_on_heap_(item);
-            assert(strlen(info) < sizeof(res.text));
-            strcpy(res.text, info);
+            if(strlen(info) >= sizeof(res.text))
+                bc_log_warn("Info test string is too long: %s", info);
+            strncpy(res.text, info, sizeof(res.text));
+            res.text[sizeof(res.text)-1] = '\0';
             free(info);
             continue;
         }
@@ -122,10 +129,15 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
             item.begin += 5;
             item = sv_strip(item, ' ');
 
-            res.parameter_infos = ReNew(bc_parsedparameterinfo, res.parameter_infos, ++res.parameter_infos_len);
+            res.parameter_infos_len++;
+            if (res.parameter_infos_len > MAX_PARAMETERS) {
+                res.parameter_infos_len = MAX_PARAMETERS;
+                bc_log_warn("Too many parameter infos, only %d are allowed", MAX_PARAMETERS);
+                continue;
+            }
 
             char *item_text = get_info_text_on_heap_(item);
-            res.parameter_infos[res.parameter_infos_len-1] = bc_parse_parameter_info_text(ToStrViu(item_text));
+            res.parameter_infos[res.parameter_infos_len - 1] = bc_parse_parameter_info_text(ToStrViu(item_text));
             free(item_text);
             continue;
         }
@@ -137,8 +149,10 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
             item.begin += start + 1;
             item = sv_strip(item, ' ');
             char *info = get_info_text_on_heap_(item);
-            assert(strlen(info) < sizeof(res.return_info));
-            strcpy(res.return_info, info);
+            if(strlen(info) >= sizeof(res.return_info))
+                bc_log_warn("Return info text string is too long: %s", info);
+            strncpy(res.return_info, info, sizeof(res.return_info));
+            res.return_info[sizeof(res.return_info)-1] = '\0';
             free(info);
             continue;
         }
@@ -146,8 +160,10 @@ bc_ParsedInfo bc_parse_info_text(strviu viu) {
             item.begin += 5;
             item = sv_strip(item, ' ');
             char *info = get_info_text_on_heap_(item);
-            assert(strlen(info) < sizeof(res.error_info));
-            strcpy(res.error_info, info);
+            if(strlen(info) >= sizeof(res.error_info))
+                bc_log_warn("Error info text string is too long: %s", info);
+            strncpy(res.error_info, info, sizeof(res.error_info));
+            res.error_info[sizeof(res.error_info)-1] = '\0';
             free(info);
             continue;
         }
@@ -161,42 +177,51 @@ char *bc_parse_type(strviu viu) {
     char *res;
 
     strviuarray components = {0};
-    while(viu.begin < viu.end) {
+    while (viu.begin < viu.end) {
         int next = sv_find_first_multiple(viu, "* ");
-        if(next<0) {
+        if (next < 0) {
             // rest of viu is last component
             components.size++;
-            assert(components.size < STRVIUARRAY_SIZE);
+            if(components.size >= STRVIUARRAY_SIZE) {
+                bc_log_error("Too many type components");
+                return NULL;
+            }
             components.array[components.size - 1] = viu;
             break;
-        } else if(next == 0) {
+        } else if (next == 0) {
             // should be a *
             components.size++;
-            assert(components.size < STRVIUARRAY_SIZE);
+            if(components.size >= STRVIUARRAY_SIZE) {
+                bc_log_error("Too many type components");
+                return NULL;
+            }
             components.array[components.size - 1] = (strviu) {viu.begin, viu.begin + 1};
             viu.begin++;
         } else {
             components.size++;
-            assert(components.size < STRVIUARRAY_SIZE);
+            if(components.size >= STRVIUARRAY_SIZE) {
+                bc_log_error("Too many type components");
+                return NULL;
+            }
             components.array[components.size - 1] = (strviu) {viu.begin, viu.begin + next};
-            viu.begin+=next;
+            viu.begin += next;
         }
 
         viu = sv_lstrip(viu, ' ');
     }
 
     size_t length = components.size;   // spaces + \0
-    for(size_t i=0; i < components.size; i++)
+    for (size_t i = 0; i < components.size; i++)
         length += sv_length(components.array[i]);
 
     res = New(char, length);
     char *fill_viu = res;
-    for(size_t i=0; i < components.size; i++) {
+    for (size_t i = 0; i < components.size; i++) {
         sv_cpy(fill_viu, components.array[i]);
-        fill_viu+=sv_length(components.array[i]);
+        fill_viu += sv_length(components.array[i]);
         *fill_viu++ = ' ';
     }
-    res[length-1] = '\0';
+    res[length - 1] = '\0';
     return res;
 }
 
@@ -206,7 +231,7 @@ bc_parsedparameter bc_parse_parameter(strviu viu) {
 
     viu = sv_strip(viu, ' ');
 
-    if(sv_empty(viu))
+    if (sv_empty(viu))
         return res;
 
     strviu name = {viu.end, viu.end};
@@ -220,26 +245,32 @@ bc_parsedparameter bc_parse_parameter(strviu viu) {
     name.begin++;
     type.end = name.begin;
     type = sv_rstrip(type, ' ');
-    assert(!sv_empty(type));
+    if(sv_empty(type)) {
+        bc_log_error("Parameter type is not available: %.*s", sv_length(viu), viu.begin);
+        return res;
+    }
 
-    assert(sv_length(name) < sizeof(res.name));
-    sv_cpy(res.name, name);
+    if(sv_length(name) >= sizeof(res.name))
+        bc_log_warn("Parameter name string is too long: %.*s", sv_length(name), name.begin);
+    sv_ncpy(res.name, name, sizeof(res.name));
 
     char *type_string = bc_parse_type(type);
-    assert(strlen(type_string) < sizeof(res.type));
-    strcpy(res.type, type_string);
+    if(strlen(type_string) >= sizeof(res.type))
+        bc_log_warn("Parameter name string is too long: %s", type_string);
+    strncpy(res.type, type_string, sizeof(res.type));
+    res.type[sizeof(res.type)-1] = '\0';
     free(type_string);
 
     return res;
 }
 
-bc_ParsedFunction bc_parse_function(strviu info, strviu definition) {
-    bc_ParsedFunction res = {0};
+bc_parsedfunction bc_parse_function(strviu info, strviu definition) {
+    bc_parsedfunction res = {0};
 
     res.info = bc_parse_info_text(info);
 
     int params_start = sv_find_first(definition, '(');
-    if(params_start<0)
+    if (params_start < 0)
         return res;
 
     strviu type_name = {definition.begin, definition.begin + params_start};
@@ -254,25 +285,31 @@ bc_ParsedFunction bc_parse_function(strviu info, strviu definition) {
     strviu name = {type_name.begin + name_pos + 1, type_name.end};
 
     definition = sv_eat_back_until(definition, ')');
-    if(sv_empty(definition))
+    if (sv_empty(definition))
         return res;
 
     definition.end--;
 
     strviuarray params = sv_split(definition, ',');
 
-    assert(sv_length(name) < sizeof(res.name));
-    sv_cpy(res.name, name);
+    if(params.size >= MAX_PARAMETERS) {
+        bc_log_error("Function has to many parameters: %.*s", sv_length(name), name.begin);
+        return res;
+    }
+
+    if(sv_length(name) >= sizeof(res.name))
+        bc_log_warn("Function name string is too long: %.*s", sv_length(name), name.begin);
+    sv_ncpy(res.name, name, sizeof(res.name));
 
 
     char *type_string = bc_parse_type(type);
-    assert(strlen(type_string) < sizeof(res.return_type));
-    strcpy(res.return_type, type_string);
+    if(strlen(type_string) >= sizeof(res.return_type))
+        bc_log_warn("Function return type string is too long: %s", type_string);
+    strncpy(res.return_type, type_string, sizeof(res.return_type));
+    res.return_type[sizeof(res.return_type)-1] = '\0';
     free(type_string);
 
     res.parameters_len = params.size;
-    if(res.parameters_len>0)
-        res.parameters = (bc_parsedparameter *) New(bc_parsedparameter, res.parameters_len);
     for (size_t i = 0; i < res.parameters_len; i++)
         res.parameters[i] = bc_parse_parameter(params.array[i]);
 

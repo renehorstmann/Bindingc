@@ -8,6 +8,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-long-long -pedantic -Wno-unused-f
 
 
 add_library(bindingc
+        src/log.c
         src/parsetypes.c
         src/parse.c
         src/parsefile.c

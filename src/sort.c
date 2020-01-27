@@ -4,7 +4,7 @@
 
 #include "bindingc/sort.h"
 
-bc_parameterarray bc_get_parameters(const bc_ParsedFunction *function) {
+bc_parameterarray bc_get_parameters(const bc_parsedfunction *function) {
     bc_parameterarray res = {0};
     if(function->parameters_len>0) {
         res.size = function->parameters_len;
@@ -22,7 +22,7 @@ bc_parameterarray bc_get_parameters(const bc_ParsedFunction *function) {
     return res;
 }
 
-bc_function bc_get_function_without_paramaters(const bc_ParsedFunction *function) {
+bc_function bc_get_function_without_paramaters(const bc_parsedfunction *function) {
     bc_function res = {0};
     strcpy(res.c_name, function->name);
     strcpy(res.out_name, function->name);

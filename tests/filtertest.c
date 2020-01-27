@@ -1,29 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "bindingc/parse.h"
 #include "bindingc/sort.h"
 #include "bindingc/filter.h"
 
-int error(const char *text) {
-    fputs(text, stderr);
-    return 1;
-}
-
-char *open_file_as_string(const char *filename) {
-    char *text = NULL;
-    FILE *file = fopen(filename, "r");
-    if (file) {
-        fseek(file, 0, SEEK_END);
-        long length = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        text = malloc(length);
-        if (text)
-            fread(text, 1, length, file);
-        fclose(file);
-    }
-    return text;
-}
+#include "test_helper.h"
 
 int main() {
 

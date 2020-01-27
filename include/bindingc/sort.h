@@ -4,9 +4,9 @@
 #include "parsetypes.h"
 #include "types.h"
 
-bc_parameterarray bc_get_parameters(const bc_ParsedFunction *function);
+bc_parameterarray bc_get_parameters(const bc_parsedfunction *function);
 
-bc_function bc_get_function_without_paramaters(const bc_ParsedFunction *function);
+bc_function bc_get_function_without_paramaters(const bc_parsedfunction *function);
 
 bc_FunctionArray bc_get_function_array_without_paramaters(const bc_ParsedFunctionArray *array);
 

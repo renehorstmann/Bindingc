@@ -171,7 +171,7 @@ bc_ParsedFunctionArray bc_parse_file(strviu filetext) {
     comments.size = functions.size;
     res.size = functions.size;
     if(res.size > 0)
-        res.array = New0(bc_ParsedFunction, functions.size);
+        res.array = New0(bc_parsedfunction, functions.size);
 
     for (size_t i = 0; i < functions.size; i++) {
         size_t decl_start_pos = functions.array[i].begin - copy_function;

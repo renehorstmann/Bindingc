@@ -1,37 +1,6 @@
-#include <stdio.h>
-
-
 #include "bindingc/parse.h"
 
-int error(const char *text) {
-    fputs(text, stderr);
-    return 1;
-}
-
-bool str_not_equal(const char *a, const char *b) {
-    // same pointer or both NULL
-    if (a == b)
-        return false;
-    // only one is NULL
-    if (!a || !b)
-        return true;
-    return strcmp(a, b) != 0;
-}
-
-char *open_file_as_string(const char *filename) {
-    char *text = NULL;
-    FILE *file = fopen(filename, "r");
-    if (file) {
-        fseek(file, 0, SEEK_END);
-        long length = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        text = malloc(length);
-        if (text)
-            fread(text, 1, length, file);
-        fclose(file);
-    }
-    return text;
-}
+#include "test_helper.h"
 
 int main() {
 
@@ -77,7 +46,7 @@ int main() {
 
     // info
     {
-        bc_ParsedInfo res;
+        bc_parsedinfo res;
 
         viu = ToStrViu("");
         res = bc_parse_info_text(viu);
@@ -180,7 +149,7 @@ int main() {
 
     // function
     {
-        bc_ParsedFunction res;
+        bc_parsedfunction res;
         strviu info = ToStrViu("");
 
         viu = ToStrViu("");
@@ -295,8 +264,8 @@ int main() {
         char *filetext = open_file_as_string("filetest1.txt");
         if (filetext) {
             res = bc_parse_file(ToStrViu(filetext));
-            printf("%s\n", res.array[0].name);
-            puts("test");
+//            printf("%s\n", res.array[0].name);
+//            puts("test");
         }
     }
 
