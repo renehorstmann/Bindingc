@@ -24,12 +24,12 @@ enum bc_log_level {
     LOG_TRACE, LOG_DEBUG, LOG_INFO, LOG_WARN, LOG_ERROR, LOG_WTF, LOG_NUM_LEVELS
 };
 
-#define bc_log_trace(...) log_base_(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
-#define bc_log_debug(...) log_base_(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define bc_log_info(...)  log_base_(LOG_INFO,  __FILE__, __LINE__, __VA_ARGS__)
-#define bc_log_warn(...)  log_base_(LOG_WARN,  __FILE__, __LINE__, __VA_ARGS__)
-#define bc_log_error(...) log_base_(LOG_ERROR,   __FILE__, __LINE__, __VA_ARGS__)
-#define bc_log_wtf(...)   log_base_(LOG_WTF,   __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_trace(...) bc_log_base_(LOG_TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_debug(...) bc_log_base_(LOG_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_info(...)  bc_log_base_(LOG_INFO,  __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_warn(...)  bc_log_base_(LOG_WARN,  __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_error(...) bc_log_base_(LOG_ERROR,   __FILE__, __LINE__, __VA_ARGS__)
+#define bc_log_wtf(...)   bc_log_base_(LOG_WTF,   __FILE__, __LINE__, __VA_ARGS__)
 
 void bc_log_set_log_file(FILE *file);
 void bc_log_set_min_level(enum bc_log_level level);
