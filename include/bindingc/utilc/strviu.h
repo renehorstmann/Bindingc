@@ -438,7 +438,7 @@ static void sv_cpy(char *dst, strviu viu) {
 
 /** Copies the StrViu viu into the cstring dst, but maximal max_characters_n wide */
 static void sv_ncpy(char *dst, strviu viu, size_t max_characters_n) {
-    size_t len = sv_length(viu) < max_characters_n ? sv_length(viu) : max_characters_n;
+    size_t len = sv_length(viu) < max_characters_n ? sv_length(viu) : max_characters_n-1;
     strncpy(dst, viu.begin, len);
     dst[len] = 0;
 }
