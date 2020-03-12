@@ -33,9 +33,9 @@
 
 static struct {
     FILE *log_file;
-    enum bc_log_level level;
+    enum log_level level;
     bool quiet;
-    bc_log_lock_function lock_function;
+    log_lock_function lock_function;
     void *used_data;
 } local;
 
@@ -69,7 +69,7 @@ void bc_log_set_log_file(FILE *file) {
     local.log_file = file;
 }
 
-void bc_log_set_min_level(enum bc_log_level level) {
+void bc_log_set_min_level(enum log_level level) {
     local.level = level;
 }
 
@@ -77,7 +77,7 @@ void bc_log_set_quiet(bool set) {
     local.quiet = set;
 }
 
-void bc_log_set_locking_function(bc_log_lock_function fun) {
+void bc_log_set_locking_function(log_lock_function fun) {
     local.lock_function = fun;
 }
 
@@ -86,7 +86,7 @@ void bc_log_set_locking_function_user_data(void *user_data) {
 }
 
 
-void log_base_(enum bc_log_level level, const char *leading_text, const char *file, int line, const char *format, ...) {
+void bc_log_base_(enum log_level level, const char *leading_text, const char *file, int line, const char *format, ...) {
     if (level < local.level) {
         return;
     }
