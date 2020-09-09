@@ -12,17 +12,17 @@ typedef struct {
     bc_string creation;            // c_char_p()
     bc_string to_c_template;       // $.encode()
     bc_string from_c_template;     // $.decode()
-} bc_type;
+} BcType_s;
 
 typedef struct {
-    bc_type *array;
+    BcType_s *array;
     size_t size;
-} bc_TypeArray;
+} BcTypeArray;
 
-void bc_TypeArray_kill(bc_TypeArray *self);
+void bc_type_array_kill(BcTypeArray *self);
 
-bc_type *bc_TypeArray_try_get(bc_TypeArray self, const char *name);
-bc_type *bc_TypeArray_get(bc_TypeArray self, const char *name);
+BcType_s *bc_type_array_try_get(BcTypeArray self, const char *name);
+BcType_s *bc_type_array_get(BcTypeArray self, const char *name);
 
 void bc_apply_template(char *dst, const char *template, const char *replacement);
 

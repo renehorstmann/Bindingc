@@ -6,9 +6,9 @@
 
 #include "bindingc/log.h"
 
-bc_parsedparameterinfo bc_parse_parameter_info_text(strviu viu) {
+BcParsedParameterInfo_s bc_parse_parameter_info_text(strviu viu) {
     // string view such as "c_name=\"Peter\": the c_name of some guy."
-    bc_parsedparameterinfo res = {0};
+    BcParsedParameterInfo_s res = {0};
 
     viu = sv_strip(viu, ' ');
     strviu name = {viu.begin};
@@ -72,8 +72,8 @@ static char *get_info_text_on_heap_(strviu viu) {
     return text;
 }
 
-bc_parsedinfo bc_parse_info_text(strviu viu) {
-    bc_parsedinfo res = {0};
+BcParsedInfo_s bc_parse_info_text(strviu viu) {
+    BcParsedInfo_s res = {0};
 
     // remove leading and heading white spaces
     viu = sv_strip(viu, ' ');
@@ -225,9 +225,9 @@ char *bc_parse_type(strviu viu) {
     return res;
 }
 
-bc_parsedparameter bc_parse_parameter(strviu viu) {
+BcParsedParameter_s bc_parse_parameter(strviu viu) {
     // string view such as "const char *c_name" or "string IN s", ...
-    bc_parsedparameter res = {0};
+    BcParsedParameter_s res = {0};
 
     viu = sv_strip(viu, ' ');
 
@@ -264,8 +264,8 @@ bc_parsedparameter bc_parse_parameter(strviu viu) {
     return res;
 }
 
-bc_parsedfunction bc_parse_function(strviu info, strviu definition) {
-    bc_parsedfunction res = {0};
+BcParsedFunction_s bc_parse_function(strviu info, strviu definition) {
+    BcParsedFunction_s res = {0};
 
     res.info = bc_parse_info_text(info);
 

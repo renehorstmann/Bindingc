@@ -1,6 +1,5 @@
-
+#include "assert.h"
 #include "bindingc/utilc/alloc.h"
-
 #include "bindingc/parse.h"
 
 
@@ -155,8 +154,8 @@ static strviuarray get_functions(strviu viu) {
     return functions;
 }
 
-bc_ParsedFunctionArray bc_parse_file(strviu filetext) {
-    bc_ParsedFunctionArray res = {0};
+BcParsedFunctionArray bc_parse_file(strviu filetext) {
+    BcParsedFunctionArray res = {0};
 
     char *copy_function = sv_heap_cpy(filetext);
     strviu viu = {copy_function, copy_function + sv_length(filetext)};
@@ -171,7 +170,7 @@ bc_ParsedFunctionArray bc_parse_file(strviu filetext) {
     comments.size = functions.size;
     res.size = functions.size;
     if(res.size > 0)
-        res.array = New0(bc_parsedfunction, functions.size);
+        res.array = New0(BcParsedFunction_s, functions.size);
 
     for (size_t i = 0; i < functions.size; i++) {
         size_t decl_start_pos = functions.array[i].begin - copy_function;

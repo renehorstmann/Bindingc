@@ -4,10 +4,10 @@
 #include "parsetypes.h"
 #include "types.h"
 
-bc_parameterarray bc_get_parameters(const bc_parsedfunction *function);
+BcParameterArray_s bc_get_parameters(const BcParsedFunction_s *function);
 
-bc_function bc_get_function_without_paramaters(const bc_parsedfunction *function);
+BcFunction_s bc_get_function_without_paramaters(const BcParsedFunction_s *function);
 
-bc_FunctionArray bc_get_function_array_without_paramaters(const bc_ParsedFunctionArray *array);
+BcFunctionArray bc_get_function_array_without_paramaters(const BcParsedFunctionArray *array);
 
 #endif //BINDINGC_SORT_H

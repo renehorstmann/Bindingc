@@ -6,12 +6,12 @@
 #include "parsetypes.h"
 #include "types.h"
 
-bc_FunctionArray bc_filter_function_non_static(bc_FunctionArray array, bool free_array);
+BcFunctionArray bc_filter_function_non_static(BcFunctionArray array, bool free_array);
 
-bc_FunctionArray bc_filter_function_name_prefix(bc_FunctionArray array, const char *name_prefix, bool free_array);
+BcFunctionArray bc_filter_function_name_prefix(BcFunctionArray array, const char *name_prefix, bool free_array);
 
-bc_parameterarray bc_filter_parameter_name_prefix(bc_parameterarray array, const char *name_prefix);
+BcParameterArray_s bc_filter_parameter_name_prefix(BcParameterArray_s array, const char *name_prefix);
 
-bc_parameterarray bc_filter_parameter_diff(bc_parameterarray a, bc_parameterarray b);
+BcParameterArray_s bc_filter_parameter_diff(BcParameterArray_s a, BcParameterArray_s b);
 
 #endif //BINDINGC_FILTER_H

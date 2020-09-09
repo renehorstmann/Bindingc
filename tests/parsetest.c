@@ -8,7 +8,7 @@ int main() {
 
     // parameter info
     {
-        bc_parsedparameterinfo res;
+        BcParsedParameterInfo_s res;
 
         viu = ToStrViu("");
         res = bc_parse_parameter_info_text(viu);
@@ -46,7 +46,7 @@ int main() {
 
     // info
     {
-        bc_parsedinfo res;
+        BcParsedInfo_s res;
 
         viu = ToStrViu("");
         res = bc_parse_info_text(viu);
@@ -109,7 +109,7 @@ int main() {
 
     // parameter
     {
-        bc_parsedparameter res;
+        BcParsedParameter_s res;
 
         viu = ToStrViu("");
         res = bc_parse_parameter(viu);
@@ -149,7 +149,7 @@ int main() {
 
     // function
     {
-        bc_parsedfunction res;
+        BcParsedFunction_s res;
         strviu info = ToStrViu("");
 
         viu = ToStrViu("");
@@ -259,7 +259,7 @@ int main() {
 
     {
         // file
-        bc_ParsedFunctionArray res;
+        BcParsedFunctionArray res;
 
         char *filetext = open_file_as_string("filetest1.txt");
         if (filetext) {

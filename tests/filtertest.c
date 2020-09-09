@@ -10,11 +10,11 @@ int main() {
     if(!file)
         return error("couldnt open file");
 
-    bc_ParsedFunctionArray parsed_functions = bc_parse_file(ToStrViu(file));
+    BcParsedFunctionArray parsed_functions = bc_parse_file(ToStrViu(file));
     if(parsed_functions.size != 8)
         return error("bc_parse_file failed");
 
-    bc_FunctionArray functions = bc_get_function_array_without_paramaters(&parsed_functions);
+    BcFunctionArray functions = bc_get_function_array_without_paramaters(&parsed_functions);
 
     functions = bc_filter_function_non_static(functions, true);
     if(functions.size != 7)

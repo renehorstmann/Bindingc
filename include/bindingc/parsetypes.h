@@ -6,34 +6,34 @@
 typedef struct {
     bc_shortstring name;
     bc_shortstring type;
-} bc_parsedparameter;
+} BcParsedParameter_s;
 
 typedef struct {
     bc_shortstring name;
     bc_shortstring default_value;
     bc_string info;
-} bc_parsedparameterinfo;
+} BcParsedParameterInfo_s;
 
 typedef struct {
     bc_longstring text;
     bc_string return_info;
     bc_string error_info;
-    bc_parsedparameterinfo parameter_infos[MAX_PARAMETERS];
+    BcParsedParameterInfo_s parameter_infos[MAX_PARAMETERS];
     size_t parameter_infos_len;
-} bc_parsedinfo;
+} BcParsedInfo_s;
 
 typedef struct {
     bc_shortstring name;
     bc_shortstring return_type;
-    bc_parsedparameter parameters[MAX_PARAMETERS];
+    BcParsedParameter_s parameters[MAX_PARAMETERS];
     size_t parameters_len;
-    bc_parsedinfo info;
-} bc_parsedfunction;
+    BcParsedInfo_s info;
+} BcParsedFunction_s;
 
 typedef struct {
-    bc_parsedfunction *array;
+    BcParsedFunction_s *array;
     size_t size;
-} bc_ParsedFunctionArray;
+} BcParsedFunctionArray;
 
 //typedef struct {
 //    shortstring name;
@@ -51,7 +51,7 @@ typedef struct {
 //    bc_ParsedTypeDeclarationArray members;
 //} bc_ParsedStruct;
 
-void bc_ParsedFunctionArray_kill(bc_ParsedFunctionArray *self);
+void bc_parsed_function_array_kill(BcParsedFunctionArray *self);
 
 //void bc_ParsedTypeDeclarationArray_kill(bc_ParsedTypeDeclarationArray *self);
 //

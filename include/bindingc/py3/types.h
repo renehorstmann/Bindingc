@@ -4,6 +4,6 @@
 
 #include "../bindingtypes.h"
 
-bc_TypeArray bc_py3_get_default_types();
+BcTypeArray bc_py3_get_default_types();
 
 #endif //BINDINGC_PY3_TYPES_H

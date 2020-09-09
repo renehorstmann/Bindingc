@@ -4,13 +4,13 @@
 
 #include "bindingc/bindingtypes.h"
 
-void bc_TypeArray_kill(bc_TypeArray *self) {
+void bc_type_array_kill(BcTypeArray *self) {
     Free0(self->array);
     self->size = 0;
 }
 
-bc_type *bc_TypeArray_try_get(bc_TypeArray self, const char *name){
-    bc_type *res = NULL;
+BcType_s *bc_type_array_try_get(BcTypeArray self, const char *name){
+    BcType_s *res = NULL;
     for(size_t i=0; i<self.size; i++) {
         if(strcmp(self.array[i].c_name, name) == 0)
             return self.array+i;
@@ -18,8 +18,8 @@ bc_type *bc_TypeArray_try_get(bc_TypeArray self, const char *name){
     return res;
 }
 
-bc_type *bc_TypeArray_get(bc_TypeArray self, const char *name) {
-    bc_type *res = bc_TypeArray_try_get(self, name);
+BcType_s *bc_type_array_get(BcTypeArray self, const char *name) {
+    BcType_s *res = bc_type_array_try_get(self, name);
     assert(res);
     return res;
 }

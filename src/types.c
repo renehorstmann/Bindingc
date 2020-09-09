@@ -3,7 +3,7 @@
 
 #include "bindingc/types.h"
 
-void bc_FunctionArray_kill(bc_FunctionArray *self) {
+void bc_function_array_kill(BcFunctionArray *self) {
     Free0(self->array);
     self->size = 0;
 }

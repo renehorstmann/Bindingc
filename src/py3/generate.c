@@ -6,27 +6,27 @@
 #include "bindingc/utilc/dynarray.h"
 #include "bindingc/py3/generate.h"
 
-DynArray(char, StrArray)
+DynArray(char, StrArray, str_array)
 
 
 
 static void append(StrArray *arr, const char *str) {
-    StrArray_push_array(arr, str, strlen(str));
+    str_array_push_array(arr, str, strlen(str));
 }
 
 static void append_indent(StrArray *arr, int level) {
     size_t old_size = arr->size;
-    StrArray_resize(arr, old_size + level);
+    str_array_resize(arr, old_size + level);
     for (int i = 0; i < level; i++)
         arr->array[old_size + i - 1] = ' ';
 }
 
 
 char *bc_py3_generate_function_head(const char *name,
-                                    const bc_parameterarray *in_parameter, const bc_parameterarray *out_parameter,
-                                    bc_TypeArray types, int indent) {
+                                    const BcParameterArray_s *in_parameter, const BcParameterArray_s *out_parameter,
+                                    BcTypeArray types, int indent) {
     StrArray res = {0};
-    StrArray_resize(&res, 1);
+    str_array_resize(&res, 1);
     res.array[0] = '\0';
 
     append_indent(&res, indent);
@@ -39,12 +39,12 @@ char *bc_py3_generate_function_head(const char *name,
         if (i > 0)
             append(&res, ", ");
 
-        const bc_parameter *param = &in_parameter->array[i];
+        const BcParameter_s *param = &in_parameter->array[i];
         if (i > 1)
             append(&res, ", ");
         append(&res, param->name);
         append(&res, ": ");
-        append(&res, bc_TypeArray_get(types, param->type)->out_name);
+        append(&res, bc_type_array_get(types, param->type)->out_name);
     }
 
     append(&res, ")");
@@ -61,7 +61,7 @@ char *bc_py3_generate_function_head(const char *name,
         for (size_t i = 0; i < out_parameter->size; i++) {
             if (i > 0)
                 append(&res, ", ");
-            append(&res, bc_TypeArray_get(types, out_parameter->array[i].type)->out_name);
+            append(&res, bc_type_array_get(types, out_parameter->array[i].type)->out_name);
         }
         if (out_parameter->size > 1)
             append(&res, "]");
@@ -72,9 +72,9 @@ char *bc_py3_generate_function_head(const char *name,
 }
 
 char *bc_py3_generate_info(const char *text, const char *returun_info,
-                           const bc_parameterarray *parameter, int indent) {
+                           const BcParameterArray_s *parameter, int indent) {
     StrArray res = {0};
-    StrArray_resize(&res, 1);
+    str_array_resize(&res, 1);
     res.array[0] = '\0';
 
     append_indent(&res, indent);
@@ -103,7 +103,7 @@ char *bc_py3_generate_info(const char *text, const char *returun_info,
     }
 
     for (size_t i = 0; i < parameter->size; i++) {
-        const bc_parameter *param = &parameter->array[i];
+        const BcParameter_s *param = &parameter->array[i];
         if (*param->info != 0) {
             append_indent(&res, indent);
             append(&res, ":param ");
@@ -127,9 +127,9 @@ char *bc_py3_generate_info(const char *text, const char *returun_info,
     return res.array;
 }
 
-char *bc_py3_generate_function(const bc_function *function, bc_TypeArray types, int indent) {
+char *bc_py3_generate_function(const BcFunction_s *function, BcTypeArray types, int indent) {
     StrArray res = {0};
-    StrArray_resize(&res, 1);
+    str_array_resize(&res, 1);
     res.array[0] = '\0';
 
     // todo
@@ -143,8 +143,8 @@ char *bc_py3_generate_function(const bc_function *function, bc_TypeArray types, 
         }
     }
 
-    bc_parameterarray in_params = {0};
-    bc_parameterarray out_params = {0};
+    BcParameterArray_s in_params = {0};
+    BcParameterArray_s out_params = {0};
 
     if (function->return_parameter.is_output)
         out_params.array[out_params.size++] = function->return_parameter;
@@ -191,9 +191,9 @@ char *bc_py3_generate_function(const bc_function *function, bc_TypeArray types, 
 }
 
 
-char *bc_py3_generate_interface(const bc_function *function, bc_TypeArray types, int indent) {
+char *bc_py3_generate_interface(const BcFunction_s *function, BcTypeArray types, int indent) {
     StrArray res = {0};
-    StrArray_set_capacity(&res, 32);
+    str_array_set_capacity(&res, 32);
 
     // parameters
     if(function->parameters.size>0) {
@@ -204,7 +204,7 @@ char *bc_py3_generate_interface(const bc_function *function, bc_TypeArray types,
         for(size_t i=0; i<function->parameters.size; i++) {
             if(i>=1)
                 append(&res, ", ");
-            append(&res, bc_TypeArray_get(types, function->parameters.array[i].type)->c_name);
+            append(&res, bc_type_array_get(types, function->parameters.array[i].type)->c_name);
         }
         append(&res, "]\n");
     }
@@ -215,11 +215,11 @@ char *bc_py3_generate_interface(const bc_function *function, bc_TypeArray types,
         append(&res, "_lib.");
         append(&res, function->c_name);
         append(&res, ".restype = ");
-        append(&res, bc_TypeArray_get(types, function->return_parameter.type)->out_name);
+        append(&res, bc_type_array_get(types, function->return_parameter.type)->out_name);
         append(&res, "\n");
     }
 
-    StrArray_push(&res, '\0');
+    str_array_push(&res, '\0');
 
     return res.array;
 }

@@ -6,10 +6,10 @@
 
 int main() {
 
-    bc_TypeArray types = bc_py3_get_default_types();
-    bc_function function;
+    BcTypeArray types = bc_py3_get_default_types();
+    BcFunction_s function;
 
-    function = (bc_function){
+    function = (BcFunction_s){
             "ce_load",
             "load",
             "loads the module",

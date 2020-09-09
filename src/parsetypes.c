@@ -3,7 +3,7 @@
 
 #include "bindingc/parsetypes.h"
 
-void bc_ParsedFunctionArray_kill(bc_ParsedFunctionArray *self) {
+void bc_parsed_function_array_kill(BcParsedFunctionArray *self) {
     Free0(self->array);
     self->size = 0;
 }
