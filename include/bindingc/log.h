@@ -21,7 +21,7 @@
 #endif
 
 #ifndef LOGC_NAMESPACE
-#define LOGC_NAMESPACE logc
+#define LOGC_NAMESPACE bc_logc
 #endif
 
 #define LogcConcat(a, b) a ## b

@@ -235,6 +235,7 @@ static int sv_find_last_multiple(strviu viu, const char *multiple_chars) {
     return -1;
 }
 
+
 /** @returns: A new StrViu, based on viu, without every leading char until the char until */
 static strviu sv_eat_until(strviu viu, char until) {
     int pos = sv_find_first(viu, until);
@@ -242,6 +243,20 @@ static strviu sv_eat_until(strviu viu, char until) {
         viu.begin += pos;
     else
         viu.begin = viu.end;
+    return viu;
+}
+
+/**
+ * @returns: A new StrViu, based on viu, without every leading char until the char until. The cut is set into get
+ */
+static strviu sv_eat_get_until(strviu viu, char until, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_first(viu, until);
+    if (pos >= 0)
+        viu.begin += pos;
+    else
+        viu.begin = viu.end;
+    get->end = viu.begin;
     return viu;
 }
 
@@ -255,6 +270,18 @@ static strviu sv_eat_back_until(strviu viu, char until) {
     return viu;
 }
 
+/** @returns: A new StrViu, based on viu, without every tailing char until the char until. The cut is set into get */
+static strviu sv_eat_get_back_until(strviu viu, char until, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_last(viu, until);
+    if (pos >= 0)
+        viu.end = viu.begin + pos + 1;
+    else
+        viu.end = viu.begin;
+    get->end = viu.begin;
+    return viu;
+}
+
 /** @returns: A new StrViu, based on viu, without every leading char until the StrViu until */
 static strviu sv_eat_until_sv(strviu viu, strviu until) {
     int pos = sv_find_first_sv(viu, until);
@@ -262,6 +289,18 @@ static strviu sv_eat_until_sv(strviu viu, strviu until) {
         viu.begin += pos;
     else
         viu.begin = viu.end;
+    return viu;
+}
+
+/** @returns: A new StrViu, based on viu, without every leading char until the StrViu until. The cut is set into get */
+static strviu sv_eat_get_until_sv(strviu viu, strviu until, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_first_sv(viu, until);
+    if (pos >= 0)
+        viu.begin += pos;
+    else
+        viu.begin = viu.end;
+    get->end = viu.begin;
     return viu;
 }
 
@@ -275,14 +314,36 @@ static strviu sv_eat_back_until_sv(strviu viu, strviu until) {
     return viu;
 }
 
+/** @returns: A new StrViu, based on viu, without every tailing char until the StrViu until. The cut is set into get */
+static strviu sv_eat_get_back_until_sv(strviu viu, strviu until, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_last_sv(viu, until);
+    if (pos >= 0)
+        viu.end = viu.begin + pos + sv_length(until);
+    else
+        viu.end = viu.begin;
+    get->end = viu.begin;
+    return viu;
+}
+
 /** @returns: A new StrViu, based on viu, without every leading char until the cstring until */
 static strviu sv_eat_until_cstring(strviu viu, const char *until) {
     return sv_eat_until_sv(viu, ToStrViu(until));
 }
 
+/** @returns: A new StrViu, based on viu, without every leading char until the cstring until. The cut is set into get */
+static strviu sv_eat_get_until_cstring(strviu viu, const char *until, strviu *get) {
+    return sv_eat_get_until_sv(viu, ToStrViu(until), get);
+}
+
 /** @returns: A new StrViu, based on viu, without every tailing char until the cstring until */
 static strviu sv_eat_back_until_cstring(strviu viu, const char *until) {
     return sv_eat_back_until_sv(viu, ToStrViu(until));
+}
+
+/** @returns: A new StrViu, based on viu, without every tailing char until the cstring until. The cut is set into get */
+static strviu sv_eat_get_back_until_cstring(strviu viu, const char *until, strviu *get) {
+    return sv_eat_get_back_until_sv(viu, ToStrViu(until), get);
 }
 
 /** @returns: A new StrViu, based on viu, without every leading char until one of the chars in multiple_chars */
@@ -295,6 +356,18 @@ static strviu sv_eat_until_multiple(strviu viu, const char *multiple_chars) {
     return viu;
 }
 
+/** @returns: A new StrViu, based on viu, without every leading char until one of the chars in multiple_chars. The cut is set into get */
+static strviu sv_eat_get_until_multiple(strviu viu, const char *multiple_chars, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_first_multiple(viu, multiple_chars);
+    if (pos >= 0)
+        viu.begin += pos;
+    else
+        viu.begin = viu.end;
+    get->end = viu.begin;
+    return viu;
+}
+
 /** @returns: A new StrViu, based on viu, without every tailing char until one of the chars in multiple_chars */
 static strviu sv_eat_back_until_multiple(strviu viu, const char *multiple_chars) {
     int pos = sv_find_last_multiple(viu, multiple_chars);
@@ -302,6 +375,18 @@ static strviu sv_eat_back_until_multiple(strviu viu, const char *multiple_chars)
         viu.end = viu.begin + pos + 1;
     else
         viu.end = viu.begin;
+    return viu;
+}
+
+/** @returns: A new StrViu, based on viu, without every tailing char until one of the chars in multiple_chars. The cut is set into get */
+static strviu sv_eat_get_back_until_multiple(strviu viu, const char *multiple_chars, strviu *get) {
+    get->begin = viu.begin;
+    int pos = sv_find_last_multiple(viu, multiple_chars);
+    if (pos >= 0)
+        viu.end = viu.begin + pos + 1;
+    else
+        viu.end = viu.begin;
+    get->end = viu.begin;
     return viu;
 }
 

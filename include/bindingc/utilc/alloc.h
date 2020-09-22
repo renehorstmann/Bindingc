@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <signal.h>
 
+#ifndef ALLOC_SIGNAL
+#define ALLOC_SIGNAL SIGABRT
+#endif
+
 /** calls malloc and raises sig if it fails */
 static void *raising_malloc(size_t n, size_t size, int sig) {
     void *mem = malloc(n * size);
@@ -27,12 +31,12 @@ static void *raising_calloc(size_t n, size_t size, int sig) {
 
 /** calls realloc and raises sig if it fails */
 static void *raising_realloc(void *mem, size_t n, size_t size, int sig) {
-    void *mem_new = realloc(mem, n * size);
+    mem = realloc(mem, n * size);
     if(!mem) {
         fprintf(stderr, "realloc failed with n: %zu size: %zu\n", n, size);
         raise(sig);
     }
-    return mem_new;
+    return mem;
 }
 
 /** calls free and sets the pointer NULL (must be a pointer to the address) */
@@ -42,13 +46,13 @@ static void free0(void **mem) {
 }
 
 /** calls raising_malloc and casts to the given type */
-#define New(type, n) (type *) raising_malloc((n), sizeof(type), SIGABRT)
+#define New(type, n) (type *) raising_malloc((n), sizeof(type), ALLOC_SIGNAL)
 
 /** calls raising_calloc and casts to the given type */
-#define New0(type, n) (type *) raising_calloc((n), sizeof(type), SIGABRT)
+#define New0(type, n) (type *) raising_calloc((n), sizeof(type), ALLOC_SIGNAL)
 
 /** calls raising_realloc and casts to the given type */
-#define ReNew(type, mem, n) (type *) raising_realloc((mem), (n), sizeof(type), SIGABRT)
+#define ReNew(type, mem, n) (type *) raising_realloc((mem), (n), sizeof(type), ALLOC_SIGNAL)
 
 
 /** calls malloc and casts to the given type */
