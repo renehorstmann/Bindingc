@@ -1,20 +1,17 @@
 #ifndef BINDINGC_TEST_HELPER_H
 #define BINDINGC_TEST_HELPER_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 
-int error(const char *text) {
+static void error(const char *text) {
     fputs(text, stderr);
-    return 1;
+    exit(EXIT_FAILURE);
 }
 
-bool str_not_equal(const char *a, const char *b) {
+static bool str_not_equal(const char *a, const char *b) {
     // same pointer or both NULL
     if (a == b)
         return false;
@@ -24,7 +21,7 @@ bool str_not_equal(const char *a, const char *b) {
     return strcmp(a, b) != 0;
 }
 
-char *open_file_as_string(const char *filename) {
+static char *open_file_as_string(const char *filename) {
     char *text = NULL;
     FILE *file = fopen(filename, "r");
     if (file) {
@@ -40,8 +37,4 @@ char *open_file_as_string(const char *filename) {
 }
 
 
-
-#ifdef __cplusplus
-}
-#endif
 #endif //BINDINGC_TEST_HELPER_H
