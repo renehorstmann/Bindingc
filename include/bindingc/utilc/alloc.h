@@ -10,30 +10,30 @@
 #endif
 
 /** calls malloc and raises sig if it fails */
-static void *raising_malloc(size_t n, size_t size, int sig) {
+static void *raising_malloc(int n, int size, int sig) {
     void *mem = malloc(n * size);
     if(!mem) {
-        fprintf(stderr, "malloc failed with n: %zu size: %zu\n", n, size);
+        fprintf(stderr, "malloc failed with n: %d size: %d\n", n, size);
         raise(sig);
     }
     return mem;
 }
 
 /** calls calloc and raises sig if it fails */
-static void *raising_calloc(size_t n, size_t size, int sig) {
+static void *raising_calloc(int n, int size, int sig) {
     void *mem = calloc(n, size);
     if(!mem) {
-        fprintf(stderr, "calloc failed with n: %zu size: %zu\n", n, size);
+        fprintf(stderr, "calloc failed with n: %d size: %d\n", n, size);
         raise(sig);
     }
     return mem;
 }
 
 /** calls realloc and raises sig if it fails */
-static void *raising_realloc(void *mem, size_t n, size_t size, int sig) {
+static void *raising_realloc(void *mem, int n, int size, int sig) {
     mem = realloc(mem, n * size);
     if(!mem) {
-        fprintf(stderr, "realloc failed with n: %zu size: %zu\n", n, size);
+        fprintf(stderr, "realloc failed with n: %d size: %d\n", n, size);
         raise(sig);
     }
     return mem;
